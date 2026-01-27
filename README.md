@@ -32,11 +32,25 @@ Creators in Zambia lack reliable monetization tools because most global platform
 ---
 
 ## 📁 Project Structure
-[backend/](backend/README.md) - Backend service (API, database models, payment integration)  
-[frontend/](frontend/README.md) - Frontend app (React components, state management, UI)  
-[.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/) - Issue templates for features, bugs, QA, integration  
-[docs/](docs/) - Architecture diagrams, API specs
-[CONTRIBUTION.md](docs/CONTRIBUTION.md) - Contribution guidelines
+```
+/
+├── backend/                ← Backend service (Django/Node.js)
+│   ├── api/                ← API endpoints & business logic
+│   ├── models/             ← Database models & migrations
+│   ├── tests/              ← Unit & integration tests
+│   ├── manage.py           ← Django management script (or server.js for Node)
+│   └── requirements.txt    ← Python dependencies (or package.json for Node)
+│   └── README.md           ← Backend documentation   
+├── frontend/               ← Frontend application (React)
+│   ├── src/                ← React source code
+│   ├── public/             ← Public assets
+│   ├── tests/              ← Frontend tests
+│   └── package.json        ← Node dependencies
+│   └── README.md           ← Frontend documentation
+├── docs/                   ← Documentation & issue templates
+├── .github/ISSUE_TEMPLATE/ ← GitHub issue templates
+├── README.md               ← This file
+```
 
 ## 🚀 Quick Start
 
