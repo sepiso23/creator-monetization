@@ -33,7 +33,6 @@ htmlcov/
 db.sqlite3
 instance/
 *.sqlite3
-migrations/
 ####################################
 # Node / React / Vite
 ####################################
