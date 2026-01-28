@@ -142,45 +142,8 @@ python manage.py runserver
 
 ## 📝 Environment Variables
 
-Create `.env` file:
+Create `.env` file and copy from `.env.dist`. Key variables:
 
-```env
-# Django
-DEBUG=True
-SECRET_KEY=your-secret-key-here
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/tipzed_dev
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# JWT
-JWT_SECRET=your-jwt-secret
-JWT_EXPIRY=3600
-JWT_REFRESH_EXPIRY=604800
-
-# Mobile Money Provider
-MOBILE_MONEY_API_KEY=your-api-key
-MOBILE_MONEY_API_URL=https://api.provider.com
-MOBILE_MONEY_WEBHOOK_SECRET=webhook-secret
-
-# Email (for notifications)
-EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your-email
-EMAIL_HOST_PASSWORD=your-password
-
-# Sentry (error tracking)
-SENTRY_DSN=
-
-# CORS
-CORS_ALLOWED_ORIGINS=http://localhost:3000
-```
-
----
 
 ## 🔐 Authentication
 
@@ -392,12 +355,6 @@ pytest apps/payments/tests.py
 pytest --cov=apps --cov-report=html
 ```
 
-### Test Development
-- Use `pytest` fixtures for setup
-- Use `factory_boy` for test data
-- Aim for 80%+ code coverage
-- Test both happy path and error cases
-
 ---
 
 ## 🔄 Payment Flow
@@ -425,27 +382,6 @@ pytest --cov=apps --cov-report=html
 
 ---
 
-## 🔒 Security
-
-### Best Practices
-- JWT tokens for authentication
-- Role-based permissions (creator, fan, admin)
-- Input validation on all endpoints
-- SQL injection prevention (Django ORM)
-- CORS configured for frontend domain
-- Rate limiting on public endpoints
-- Webhook signature verification
-- No sensitive data in logs
-- Database encryption at rest
-- SSL/TLS for all API calls
-
-### Secrets Management
-- Store all secrets in `.env` (never commit)
-- Use environment variables
-- Rotate JWT secrets regularly
-- Store mobile money API keys in vault
-
----
 
 ## 📊 Monitoring & Logging
 
@@ -482,16 +418,6 @@ redis-cli ping
 # Should return: PONG
 ```
 
-### Migration Issues
-```bash
-# Show migration status
-python manage.py showmigrations
-
-# Reset migrations (dev only!)
-python manage.py migrate apps.auth zero
-```
-
----
 
 ## 📚 Development Guidelines
 
@@ -563,25 +489,7 @@ sudo systemctl restart gunicorn
 
 Want to help with backend development?
 
-**See [CONTRIBUTION.md](../CONTRIBUTION.md) for:**
-- Branching strategy & commit conventions
-- Pull request guidelines
-- Python/Django code style
-- Testing requirements (80%+ coverage)
-- Code review process with Peter (backend lead)
-
-**Code Style:**
-- Follow PEP 8 with Black formatter
-- Use type hints
-- Add docstrings to functions
-- 80% test coverage minimum
-
-**Before Submitting PR:**
-```bash
-black .
-pytest --cov=apps
-flake8 .
-```
+**See [CONTRIBUTION.md](../CONTRIBUTION.md)**
 
 **Contact:** Peter Zyambo (backend lead)
 
