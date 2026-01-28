@@ -36,7 +36,7 @@ backend/
 │   ├── wsgi.py              ← WSGI entry point
 │   └── celery.py            ← Celery configuration
 ├── apps/
-│   ├── auth/
+│   ├── customauth/
 │   │   ├── migrations/      ← Database migrations
 │   │   ├── models.py        ← User model with roles
 │   │   ├── views.py         ← Auth endpoints (register, login, refresh)
@@ -74,7 +74,7 @@ backend/
 │   │   ├── services.py      ← Payout processing
 │   │   ├── tests.py
 │   │   └── urls.py
-│   └── admin/
+│   └── customadmin/
 │       ├── views.py         ← Admin endpoints
 │       ├── serializers.py
 │       ├── permissions.py   ← Admin-only access
