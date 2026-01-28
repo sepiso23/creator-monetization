@@ -42,14 +42,12 @@ backend/
 │   │   ├── views.py         ← Auth endpoints (register, login, refresh)
 │   │   ├── serializers.py   ← Request/response validation
 │   │   ├── permissions.py   ← Role-based permissions
-│   │   ├── tests.py         ← Auth tests
 │   │   └── urls.py          ← Auth routes
 │   ├── creators/
 │   │   ├── migrations/      ← Database migrations
 │   │   ├── models.py        ← Creator profile model
 │   │   ├── views.py         ← Profile endpoints
 │   │   ├── serializers.py   ← Profile serialization
-│   │   ├── tests.py
 │   │   └── urls.py
 │   ├── wallets/
 │   │   ├── migrations/      ← Database migrations
@@ -57,7 +55,6 @@ backend/
 │   │   ├── views.py         ← Wallet endpoints
 │   │   ├── serializers.py
 │   │   ├── services.py      ← Business logic
-│   │   ├── tests.py
 │   │   └── urls.py
 │   ├── payments/
 │   │   ├── migrations/      ← Database migrations
@@ -65,33 +62,23 @@ backend/
 │   │   ├── views.py         ← Payment endpoints
 │   │   ├── webhooks.py      ← Mobile money webhooks
 │   │   ├── services.py      ← Payment processing
-│   │   ├── tests.py
 │   │   └── urls.py
 │   ├── payouts/
 │   │   ├── migrations/      ← Database migrations
 │   │   ├── models.py        ← Payout request model
 │   │   ├── views.py         ← Payout endpoints
 │   │   ├── services.py      ← Payout processing
-│   │   ├── tests.py
 │   │   └── urls.py
 │   └── customadmin/
 │       ├── views.py         ← Admin endpoints
 │       ├── serializers.py
 │       ├── permissions.py   ← Admin-only access
-│       ├── tests.py
 │       └── urls.py
 ├── tests/
-│   ├── test_integration.py  ← Integration tests
-│   ├── test_api.py          ← API endpoint tests
-│   └── factories.py         ← Test data factories
+|── conftest.py              ← Pytest fixtures
+|── factories.py             ← Test data factories
 ├── utils/
-│   ├── auth.py              ← JWT helpers
-│   ├── validators.py        ← Input validation
-│   ├── exceptions.py        ← Custom exceptions
-│   └── decorators.py        ← Custom decorators
 ├── middleware/
-│   ├── auth_middleware.py   ← Token verification
-│   └── error_handler.py     ← Error responses
 ├── management/
 │   └── commands/            ← Custom management commands
 ├── manage.py                ← Django CLI
