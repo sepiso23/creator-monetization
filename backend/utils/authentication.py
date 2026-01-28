@@ -1,0 +1,69 @@
+from rest_framework.authentication import TokenAuthentication, BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth import get_user_model
+from apps.customauth.models import APIClient
+
+User = get_user_model()
+
+
+class APIKeyAuthentication(BaseAuthentication):
+    """
+    Authentication using API keys for frontend clients.
+    Useful for service-to-service communication and frontend identification.
+    """
+
+    def authenticate(self, request):
+        """
+        Authenticate using API key from request header.
+        Format: X-API-Key: sk_xxxxx
+        """
+        api_key = request.META.get('HTTP_X_API_KEY')
+
+        if not api_key:
+            return None
+
+        try:
+            client = APIClient.objects.get(api_key=api_key, is_active=True)
+        except APIClient.DoesNotExist:
+            raise AuthenticationFailed('Invalid or inactive API key.')
+
+        # Store client info in request for later use
+        request.client = client
+        # Return None to continue with JWT authentication
+        return None
+
+    def authenticate_header(self, request):
+        """Return the authentication header."""
+        return 'X-API-Key'
+
+
+class ClientIdentificationMiddleware:
+    """
+    Middleware to identify the client making the request.
+    Useful for multi-frontend API with client-specific behavior.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Try to identify client from API key
+        api_key = request.META.get('HTTP_X_API_KEY')
+        if api_key:
+            try:
+                client = APIClient.objects.get(api_key=api_key, is_active=True)
+                request.client = client
+            except APIClient.DoesNotExist:
+                pass
+
+        # Try to identify from X-Client-ID header
+        client_id = request.META.get('HTTP_X_CLIENT_ID')
+        if client_id and not hasattr(request, 'client'):
+            try:
+                client = APIClient.objects.get(id=client_id, is_active=True)
+                request.client = client
+            except APIClient.DoesNotExist:
+                pass
+
+        response = self.get_response(request)
+        return response

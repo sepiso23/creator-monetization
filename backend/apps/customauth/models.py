@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+import uuid
+import secrets
 
 
 class CustomUserManager(BaseUserManager):
@@ -33,10 +35,17 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """Custom user model using email for authentication."""
 
+    USER_TYPE_CHOICES = (
+        ('creator', 'Creator'),
+        ('admin', 'Admin'),
+        ('staff', 'Staff'),
+    )
+
     email = models.EmailField(unique=True, max_length=255)
     username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='creator')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -64,3 +73,52 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         """Return the user's short name."""
         return self.first_name
+
+    def is_creator(self):
+        """Check if user is a creator."""
+        return self.user_type == 'creator'
+
+    def is_admin_user(self):
+        """Check if user is admin or staff."""
+        return self.user_type in ['admin', 'staff']
+
+
+class APIClient(models.Model):
+    """Model for managing API clients (different frontends)."""
+
+    CLIENT_TYPE_CHOICES = (
+        ('web', 'Web Application'),
+        ('mobile', 'Mobile Application'),
+        ('internal', 'Internal Service'),
+        ('partner', 'Partner API'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    client_type = models.CharField(max_length=20, choices=CLIENT_TYPE_CHOICES)
+    api_key = models.CharField(max_length=255, unique=True, editable=False)
+    is_active = models.BooleanField(default=True)
+    rate_limit = models.IntegerField(default=1000, help_text="Requests per hour")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'auth_apiclient'
+        verbose_name = 'API Client'
+        verbose_name_plural = 'API Clients'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        """Generate API key if not present."""
+        if not self.api_key:
+            self.api_key = f"sk_{secrets.token_urlsafe(32)}"
+        super().save(*args, **kwargs)
+
+    def regenerate_api_key(self):
+        """Regenerate the API key."""
+        self.api_key = f"sk_{secrets.token_urlsafe(32)}"
+        self.save()

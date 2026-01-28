@@ -11,8 +11,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_active', 'date_joined')
-        read_only_fields = ('id', 'date_joined')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'is_active', 'date_joined')
+        read_only_fields = ('id', 'user_type', 'date_joined')
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -41,13 +41,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """Create user with hashed password."""
+        """Create user as creator with hashed password."""
+        # Creators self-register, so force user_type to 'creator'
         user = User.objects.create_user(
             email=validated_data['email'],
             username=validated_data['username'],
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
+            last_name=validated_data.get('last_name', ''),
+            user_type='creator'  # Self-registered users are creators
         )
         return user
 
@@ -62,7 +64,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add custom claims
         token['email'] = user.email
         token['username'] = user.username
+        token['user_type'] = user.user_type
         token['full_name'] = user.get_full_name()
+        token['is_staff'] = user.is_staff
         return token
 
     def validate(self, attrs):
