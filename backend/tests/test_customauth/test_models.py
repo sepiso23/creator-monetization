@@ -32,7 +32,7 @@ class TestCustomUserModel:
     def test_user_str_representation(self):
         """Test user string representation."""
         user = UserFactory(email="test@example.com")
-        assert str(user) == "test@example.com"
+        assert str(user) == f"test@example.com {user.username}"
 
     def test_get_full_name(self):
         """Test getting user full name."""
