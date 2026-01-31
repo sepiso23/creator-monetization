@@ -1,7 +1,7 @@
 from django.db.models import Sum
 
-from lipila.models.payment_related import Wallet
-from lipila.exceptions import WalletNotFound
+from apps.wallets.models.payment_related import Wallet
+from utils.exceptions import WalletNotFound
 
 
 class WalletService:

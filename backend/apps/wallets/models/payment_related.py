@@ -1,12 +1,13 @@
 from django.db import models
-from decimal import Decimal
-from django.core.validators import MinValueValidator
-from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from identity.models import SchoolProfile
-from .payment import UUIDModel, TimeStampedModel, SoftDeleteModel
+from apps.creators.models import CreatorProfile
 from .payment import (
-    Payment, PaymentProvider, PaymentMethod, PaymentStatus, Currency)
+    Payment,
+    PaymentProvider,
+    PaymentStatus,
+    Currency,
+    UUIDModel,
+    TimeStampedModel)
 from django.contrib.auth import get_user_model
 
 
@@ -14,8 +15,8 @@ User = get_user_model()
 
 
 class Wallet(UUIDModel):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name="wallet")
+    creator = models.OneToOneField(
+        CreatorProfile, on_delete=models.CASCADE, related_name="wallet")
 
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -36,7 +37,7 @@ class Wallet(UUIDModel):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(balance__gte=0),
+                condition=models.Q(balance__gte=0),
                 name="wallet_balance_non_negative",
             )
         ]
@@ -160,201 +161,6 @@ class WalletKYC(models.Model):
         return self.readonly_fields
 
 
-class Customer(UUIDModel, TimeStampedModel, SoftDeleteModel):
-    """Model for storing customer information for our partners"""
-
-    owner = models.ForeignKey(
-        User,  # The user who owns this customer
-        on_delete=models.CASCADE,
-        related_name="customers",
-    )
-    user = models.ForeignKey(
-        User,  # The user profile associated with this customer
-        on_delete=models.CASCADE,
-        related_name="customer_profile",
-    )
-    external_id = models.CharField(
-        max_length=255, db_index=True, null=True, blank=True)
-    company = models.CharField(max_length=200, blank=True)
-
-    # Billing address
-    billing_address_line1 = models.CharField(max_length=255, blank=True)
-    billing_address_line2 = models.CharField(max_length=255, blank=True)
-    billing_city = models.CharField(max_length=100, blank=True)
-    billing_state = models.CharField(max_length=100, blank=True)
-    billing_postal_code = models.CharField(max_length=20, blank=True)
-    billing_country = models.CharField(max_length=2, blank=True)
-
-    # Provider-specific customer IDs
-    pawapay_customer_id = models.CharField(
-        max_length=255, blank=True, null=True, db_index=True
-    )
-    # Add other provider customer IDs as needed
-
-    metadata = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        verbose_name = _("Customer")
-        verbose_name_plural = _("Customers")
-        indexes = [
-            models.Index(fields=["external_id"]),
-        ]
-
-    def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
-
-
-class Invoice(UUIDModel, TimeStampedModel, SoftDeleteModel):
-    """Customer model for storing customer information"""
-
-    customer = models.ForeignKey(
-        Customer,
-        on_delete=models.CASCADE,
-        related_name="invoices",
-        null=True,
-        blank=True,
-    )
-
-    school = models.ForeignKey(
-        SchoolProfile,
-        on_delete=models.CASCADE,
-        related_name="platform_invoices",
-        null=True,
-        blank=True,
-    )
-
-    invoice_type = models.CharField(
-        max_length=30,
-        choices=[
-            ("CUSTOMER", "Customer Invoice"),
-            ("PLATFORM_FEE", "Platform Fee"),
-        ],
-        db_index=True,
-        default="CUSTOMER",
-    )
-    payment = models.ForeignKey(
-        Payment,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="invoices",
-    )
-
-    amount = models.DecimalField(max_digits=20, decimal_places=2)
-
-    # NEW: flat discount amount
-    discount = models.DecimalField(
-        max_digits=20,
-        decimal_places=2,
-        default=Decimal("0.00"),
-        validators=[MinValueValidator(0)],
-        help_text="Flat discount amount",
-    )
-    multiple_payers = models.BooleanField(default=False)
-
-    remarks = models.CharField(
-        max_length=500, help_text=_("Short Message to Payer"))
-    created_at = models.DateTimeField(auto_now=True)
-    due_date = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(
-        max_length=50, choices=PaymentStatus.choices,
-        default=PaymentStatus.PENDING
-    )
-
-    from django.core.exceptions import ValidationError
-
-    def clean(self):
-        # --- Basic invariants (always enforced) ---
-        if self.invoice_type == "CUSTOMER" and not self.customer:
-            raise ValidationError("Customer invoice must have a customer")
-
-        if self.invoice_type == "PLATFORM_FEE" and not self.school:
-            raise ValidationError("Platform fee invoice must have a school")
-
-        # --- Creation-only constraint ---
-        if not self.pk:  # object is being created
-            if self.customer and self.school:
-                raise ValidationError(
-                    "Invoice cannot belong to both customer and school"
-                )
-
-        # --- Update constraint (extra safety) ---
-        # if self.pk:
-        #     original = type(self).objects.get(pk=self.pk)
-
-        #     if original.customer != self.customer:
-        #         raise ValidationError(
-        # "Changing invoice customer is not allowed")
-
-        #     if original.school != self.school:
-        #         raise ValidationError(
-        # "Changing invoice school is not allowed")
-
-    def subtotal(self):
-        """
-        Returns the invoice amount after discount is applied.
-        Ensures subtotal never goes below zero.
-        """
-        return max(self.amount - self.discount, Decimal("0.00"))
-
-    def __str__(self):
-        return f"Invoice {self.id} - {self.subtotal()}"
-
-
-class PaymentMethodToken(UUIDModel, TimeStampedModel):
-    """Store payment method tokens for recurring payments"""
-
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="payment_methods"
-    )
-    provider = models.CharField(max_length=30, choices=PaymentProvider.choices)
-    payment_method = models.CharField(
-        max_length=30, choices=PaymentMethod.choices)
-
-    # Token information
-    token = models.CharField(
-        max_length=500, help_text=_("Payment method token from provider")
-    )
-    external_id = models.CharField(
-        max_length=255, db_index=True, null=True, blank=True)
-
-    # Card details (if applicable)
-    card_brand = models.CharField(max_length=50, blank=True)
-    card_last4 = models.CharField(max_length=4, blank=True)
-    card_exp_month = models.PositiveSmallIntegerField(null=True, blank=True)
-    card_exp_year = models.PositiveSmallIntegerField(null=True, blank=True)
-
-    # Digital wallet details
-    wallet_type = models.CharField(max_length=50, blank=True)
-    wallet_email = models.EmailField(blank=True)
-
-    # Status
-    is_default = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-
-    # Security
-    fingerprint = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text=_("Unique fingerprint for fraud detection"),
-    )
-
-    metadata = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        verbose_name = _("Payment Method Token")
-        verbose_name_plural = _("Payment Method Tokens")
-        unique_together = ["customer", "provider", "token"]
-        indexes = [
-            models.Index(fields=["customer", "is_default"]),
-            models.Index(fields=["provider", "external_id"]),
-        ]
-
-    def __str__(self):
-        return f"{self.get_payment_method_display()} - {self.customer.email}"
-
-
 class PaymentAttempt(UUIDModel, TimeStampedModel):
     """Track individual payment attempts (useful for retries)"""
 
@@ -366,10 +172,6 @@ class PaymentAttempt(UUIDModel, TimeStampedModel):
     # Attempt details
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     currency = models.CharField(max_length=3, choices=Currency.choices)
-    payment_method_token = models.ForeignKey(
-        PaymentMethodToken, on_delete=models.SET_NULL, null=True, blank=True
-    )
-
     # Status
     status = models.CharField(max_length=30, choices=PaymentStatus.choices)
     error_code = models.CharField(max_length=100, blank=True)

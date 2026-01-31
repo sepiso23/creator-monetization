@@ -5,11 +5,11 @@ from django.db import transaction
 from django.conf import settings
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
-from lipila.models.payment import Payment
-from lipila.models.payment_related import Invoice, WalletKYC
-from lipila.models.payment_related import PaymentWebhookLog as WebHook
-from lipila.utils.utils import pawapay_request
-from lipila.exceptions import DuplicateTransaction
+from apps.wallets.models.payment import Payment
+from apps.wallets.models.payment_related import Invoice, WalletKYC
+from apps.wallets.models.payment_related import PaymentWebhookLog as WebHook
+from utils.external_requests import pawapay_request
+from utils.exceptions import DuplicateTransaction
 from apps.wallets.services.transaction_service import WalletTransactionService
 
 User = get_user_model()

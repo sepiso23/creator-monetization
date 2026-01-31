@@ -1,15 +1,13 @@
-from identity.decorators import custom_login_required, admin_role_required
 from django.db.models import Sum, Q
 from django.shortcuts import render, redirect
-from lipila.models.payment_related import WalletTransaction, Wallet, Invoice
-from lipila.forms import WalletKYCForm
-from lipila.utils.utils import pawapay_request
+from apps.wallets.models.payment_related import WalletTransaction, Wallet, Invoice
+from utils.external_requests import pawapay_request
 from apps.wallets.services.transaction_service import WalletTransactionService
-from lipila.exceptions import DuplicateTransaction
-from lipila.models.payment import Payment
+from utils.exceptions import DuplicateTransaction
+from apps.wallets.models.payment import Payment
 
 
-@admin_role_required
+
 def school_costs(request, slug):
     """
     A school admin can view invoices
@@ -21,21 +19,6 @@ def school_costs(request, slug):
         request, "billing/school/invoice_list.html", {"invoices": invoices})
 
 
-@custom_login_required
-def settings_view(request, slug):
-    if request.method == "GET":
-        form = WalletKYCForm()
-        form.fields["wallet"].queryset = Wallet.objects.filter(
-            user=request.user)
-        return render(request, "billing/settings_form.html", {"form": form})
-
-    if request.method == "POST":
-        form = WalletKYCForm(request.POST or None)
-        form.save()
-        return redirect("lipila:wallet_dashboard", slug)
-
-
-@custom_login_required
 def transactions(request, slug):
     try:
         wallet = request.user.wallet
@@ -48,7 +31,7 @@ def transactions(request, slug):
         request, "wallets/transactions.html", {"transactions": transactions})
 
 
-@custom_login_required
+
 def wallet_dashboard(request, slug):
     try:
         wallet = request.user.wallet
@@ -129,7 +112,7 @@ def wallet_dashboard(request, slug):
     return render(request, "wallets/dashboard.html", context)
 
 
-@custom_login_required
+
 def wallet_authorize(request, slug):
     # If wallet already exists, go straight to dashboard
     if hasattr(request.user, "wallet"):

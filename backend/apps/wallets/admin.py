@@ -3,12 +3,8 @@ from django.utils.html import format_html
 from django.urls import reverse
 from apps.wallets.models.payment import Payment, PaymentStatus
 from apps.wallets.models.payment_related import (
-    Invoice,
-    WalletKYC,
-    Customer,
     PaymentAttempt,
     Refund,
-    PaymentMethodToken,
     Wallet,
     WalletTransaction,
 )
@@ -28,122 +24,10 @@ class WebHookAdmin(admin.ModelAdmin):
     list_display = (
         "payment", "event_type", "status", "processed_at", "external_id")
     list_filter = ("event_type", "status", "processed_at")
-    search_fields = ("payment__external_id", "payment__customer_phone")
+    search_fields = ("payment__external_id", "payment__patron_phone")
 
 
 lipila_admin.register(WebHook, WebHookAdmin)
-
-
-class WalletKYCAdmin(admin.ModelAdmin):
-    list_display = (
-        "wallet",
-        "full_name",
-        "id_document_type",
-        "id_document_number",
-        "is_verified",
-        "created_at",
-    )
-
-    list_filter = (
-        "verified",
-        "id_document_type",
-        "created_at",
-    )
-
-    search_fields = (
-        "full_name",
-        "id_document_number",
-        "wallet__user__email",
-    )
-
-    readonly_fields = (
-        "wallet",
-        "created_at",
-    )
-
-    actions = ["approve_kyc", "reject_kyc"]
-
-    fieldsets = (
-        (
-            "Wallet",
-            {
-                "fields": ("wallet",),
-            },
-        ),
-        (
-            "Personal Information",
-            {
-                "fields": (
-                    "full_name",
-                    "id_document_type",
-                    "id_document_number",
-                    "id_document_copy",
-                ),
-            },
-        ),
-        (
-            "Compliance Documents",
-            {
-                "fields": (
-                    "pacra_certificate_copy",
-                    "tax_certificate_copy",
-                ),
-            },
-        ),
-        (
-            "Payout Details",
-            {
-                "fields": (
-                    "bank_name",
-                    "bank_account_name",
-                    "bank_account_number",
-                ),
-            },
-        ),
-        (
-            "Verification",
-            {
-                "fields": ("verified",),
-            },
-        ),
-    )
-
-    @admin.display(boolean=True, description="Verified")
-    def is_verified(self, obj):
-        return obj.verified
-
-    def approve_kyc(self, request, queryset):
-        updated = queryset.update(verified=True)
-        self.message_user(
-            request, f"{updated} KYC record(s) approved successfully.")
-
-    approve_kyc.short_description = "Approve selected KYC records"
-
-    def reject_kyc(self, request, queryset):
-        updated = queryset.update(verified=False)
-        self.message_user(request, f"{updated} KYC record(s) rejected.")
-
-    reject_kyc.short_description = "Reject selected KYC records"
-
-
-lipila_admin.register(WalletKYC, WalletKYCAdmin)
-
-
-class InvoiceAdmin(admin.ModelAdmin):
-    list_display = (
-        "school", "amount", "discount", "created_at", "due_date", "status")
-
-    def get_exclude(self, request, obj=None):
-        # obj is None when you are on the "add" page
-        if obj is None:
-            # Return a list or tuple of fields to exclude ONLY in the add view
-            return ("customer", "payment")
-        # Otherwise, return the default exclude list for the change view
-        return super().get_exclude(request, obj)
-
-
-lipila_admin.register(Invoice, InvoiceAdmin)
-
 
 class WalletTransactionAdmin(admin.ModelAdmin):
     list_display = (
@@ -172,7 +56,7 @@ lipila_admin.register(WalletTransaction, WalletTransactionAdmin)
 
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "balance", "trigger_payout")
+    list_display = ("id", "creator", "balance", "trigger_payout")
 
     readonly_fields = ("balance",)
 
@@ -195,7 +79,7 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = [
         "reference",
         "external_id",
-        "customer_phone",
+        "patron_phone",
         "amount",
         "currency",
         "status_badge",
@@ -213,8 +97,8 @@ class PaymentAdmin(admin.ModelAdmin):
     ]
     search_fields = [
         "external_id",
-        "customer_phone",
-        "customer_name",
+        "patron_phone",
+        "patron_name",
         "order_reference",
     ]
     readonly_fields = [
@@ -237,7 +121,7 @@ class PaymentAdmin(admin.ModelAdmin):
         ),
         (
             "Customer Information",
-            {"fields": ("customer", "customer_email", "customer_name")},
+            {"fields": ("patron_email", "patron_name")},
         ),
         (
             "Timing",
@@ -305,20 +189,6 @@ class PaymentAdmin(admin.ModelAdmin):
 
     mark_as_deleted.short_description = "Soft delete selected payments"
 
-
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ["user", "owner", "external_id", "created_at"]
-    search_fields = ["user__email"]
-    list_filter = ["created_at", "is_deleted"]
-
-
-class PaymentMethodTokenAdmin(admin.ModelAdmin):
-    list_display = [
-        "customer", "provider", "payment_method", "is_default", "is_active"
-        ]
-    list_filter = ["provider", "payment_method", "is_default", "is_active"]
-
-
 class PaymentAttemptInline(admin.TabularInline):
     model = PaymentAttempt
     extra = 0
@@ -337,5 +207,3 @@ class RefundInline(admin.TabularInline):
 
 lipila_admin.register(Wallet, WalletAdmin)
 lipila_admin.register(Payment, PaymentAdmin)
-lipila_admin.register(PaymentMethodToken)
-lipila_admin.register(Customer, CustomerAdmin)

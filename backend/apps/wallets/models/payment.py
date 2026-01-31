@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Sum, F
+from django.db.models import Sum
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
@@ -241,28 +241,6 @@ class PaymentManager(models.Manager):
             "net_amount": captured_amount - refunded_amount,
         }
 
-    def find_duplicate_payments(
-            self, hours=1, amount_tolerance=Decimal("0.01")):
-        """Find potential duplicate payments"""
-        cutoff = timezone.now() - timedelta(hours=hours)
-
-        # Find payments with same customer,
-        # similar amount, and close timestamps
-        return (
-            self.filter(is_deleted=False, created_at__gte=cutoff)
-            .values("customer_email", "currency")
-            .annotate(
-                count=models.Count("id"),
-                total_amount=Sum("amount"),
-                min_amount=models.Min("amount"),
-                max_amount=models.Max("amount"),
-            )
-            .filter(
-                count__gt=1,
-                max_amount__lte=F("min_amount") + amount_tolerance)
-        )
-
-
 # ========== MAIN PAYMENT MODEL ==========
 class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
     """
@@ -276,8 +254,13 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
         User, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="payments"
     )
+    wallet = models.ForeignKey(
+        "Wallet",
+        on_delete=models.CASCADE,
+        related_name="payments",
+    )
     reference = models.CharField(
-        max_length=100, help_text=_("reference for customer-facing purposes")
+        max_length=100, help_text=_("reference for patron-facing purposes")
     )
     external_id = models.CharField(
         max_length=255,
@@ -307,7 +290,7 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
         max_digits=20,
         decimal_places=2,
         default=Decimal("0.00"),
-        help_text=_("Amount refunded to customer"),
+        help_text=_("Amount refunded to patron"),
     )
 
     # Status and Provider
@@ -335,20 +318,12 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
         db_index=True,
     )
 
-    # Customer and Order Information
-    customer = models.ForeignKey(
-        "Customer",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="payments",
-    )
-    customer_email = models.EmailField(
+    patron_email = models.EmailField(
         null=True,
         blank=True,
     )
-    customer_name = models.CharField(max_length=255, blank=True)
-    customer_phone = models.CharField(max_length=50, blank=True)
+    patron_name = models.CharField(max_length=255, blank=True)
+    patron_phone = models.CharField(max_length=50, blank=True)
 
     order_reference = models.CharField(
         max_length=100,
@@ -411,19 +386,11 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
     redirect_url = models.URLField(blank=True)
     webhook_url = models.URLField(blank=True)
     callback_data = models.JSONField(default=dict, blank=True)
-    wallet = models.ForeignKey(
-        "Wallet",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="payments",
-    )
-
     class Meta:
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["reference", "status"]),
-            models.Index(fields=["customer_email", "created_at"]),
+            models.Index(fields=["patron_email", "created_at"]),
             models.Index(fields=["order_reference"]),
             models.Index(fields=["provider", "status"]),
             models.Index(fields=["created_at", "status"]),
@@ -433,11 +400,11 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
         verbose_name_plural = _("Payments")
         constraints = [
             models.CheckConstraint(
-                check=models.Q(amount_captured__lte=models.F("amount")),
+                condition=models.Q(amount_captured__lte=models.F("amount")),
                 name="amount_captured_lte_amount",
             ),
             models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     amount_refunded__lte=models.F("amount_captured")),
                 name="amount_refunded_lte_amount_captured",
             ),

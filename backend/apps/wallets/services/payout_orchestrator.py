@@ -1,12 +1,11 @@
 from decimal import Decimal
 import uuid
 from django.db import transaction
-from lipila.exceptions import InvalidTransaction
 from django.core.exceptions import PermissionDenied
 from apps.wallets.services.transaction_service import WalletTransactionService
 from apps.wallets.services.fee_service import FeeService
 from apps.wallets.services.wallet_service import WalletService
-from lipila.exceptions import InsufficientBalance
+from utils.exceptions import InsufficientBalance, InvalidTransaction
 
 
 class PayoutOrchestrator:

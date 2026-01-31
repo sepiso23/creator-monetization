@@ -1,5 +1,5 @@
 from celery import shared_task
-from lipila.utils.utils import pawapay_request
+from utils.external_requests import pawapay_request
 from apps.wallets.models.payment import Payment
 from apps.wallets.models.payment_related import Wallet
 from apps.wallets.services.payout_orchestrator import PayoutOrchestrator

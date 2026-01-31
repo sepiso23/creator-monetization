@@ -2,9 +2,9 @@ from django.db import models
 from django.utils import timezone
 
 
-class SchoolUsage(models.Model):
+class CreatorUsage(models.Model):
     school = models.OneToOneField(
-        "identity.SchoolProfile",
+        "apps.creators.CreatorProfile",
         on_delete=models.CASCADE, related_name="usage"
     )
 

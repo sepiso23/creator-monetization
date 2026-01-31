@@ -2,8 +2,8 @@ import uuid
 from decimal import Decimal
 from django.db import transaction
 
-from lipila.models.payment_related import WalletTransaction, Wallet
-from lipila.exceptions import (
+from apps.wallets.models.payment_related import WalletTransaction, Wallet
+from utils.exceptions import (
     InsufficientBalance,
     DuplicateTransaction,
     InvalidTransaction,
