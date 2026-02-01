@@ -36,7 +36,7 @@ def pawapay_request(method, endpoint, headers=None, payload=None):
         headers: Optional dictionary of headers.
         payload: Optional dictionary for JSON payload.
     Returns:
-        Tuple of (response data, status code).
+        Tuple of ({'data': response_data}, status_code).
     """
     url = f"{settings.PAWAPAY_BASE_URL}{endpoint}"
     headers = {

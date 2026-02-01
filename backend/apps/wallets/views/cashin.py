@@ -136,7 +136,7 @@ def deposit_invoice_payment(request, invoice_id=None):
                 wallet=wallet,
             )
 
-        # 🔒 SINGLE-PAYER LOGIC
+        # SINGLE-PAYER LOGIC
         if not invoice.multiple_payers:
             if invoice.payment:
                 return render(
@@ -202,83 +202,3 @@ def deposit_invoice_payment(request, invoice_id=None):
     )
 
     return render(request, "payments/invoice_payment.html", context)
-
-
-@csrf_exempt
-def deposit_callback(request):
-    """Handles PAWAPAY Callback requests"""
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid method"}, status=400)
-
-    try:
-        payload = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
-
-    deposit_id = payload.get("depositId")
-    status = payload.get("status")
-    external_id = payload.get("providerTransactionId")
-
-    if not all([deposit_id, status]):
-        return JsonResponse({"error": "Invalid payload"}, status=400)
-
-    status = status.lower()
-
-    # IDEMPOTENCY CHECK (fast path) - check for duplicate based on external_id
-    if external_id and WebHook.objects.filter(
-            external_id=external_id).exists():
-        return JsonResponse(
-            {"message": "Duplicate callback ignored"}, status=200
-        )
-    try:
-        with transaction.atomic():
-            payment = Payment.objects.select_for_update().get(id=deposit_id)
-            # Dont update status if pending/submitted/accepted
-            # to avoid overwriting final state
-            skip_statuses = [
-                "pending",
-                "submitted",
-                "accepted",
-                "processing",
-                "in_reconciliation",
-            ]
-            if status in skip_statuses:
-                status = payment.status
-            payment.status = status
-            payment.save()
-
-            # Create webhook log ONCE
-            WebHook.objects.create(
-                parsed_payload=payload,
-                event_type=f"deposit.{status}",
-                payment=payment,
-                provider=payment.provider,
-                external_id=external_id,
-            )
-            if status == "completed" and payment.wallet is not None:
-                try:
-                    WalletTransactionService.cash_in(
-                        wallet=payment.user.wallet,
-                        amount=payment.amount,
-                        payment=payment,
-                        reference=external_id,
-                    )
-                    try:
-                        invoice = Invoice.objects.filter(
-                            payment=payment).first()
-                        invoice.status = status
-                        invoice.save()
-                    except Exception:
-                        pass
-                except DuplicateTransaction:
-                    pass
-
-    except Payment.DoesNotExist:
-        return JsonResponse({"status": "NOT_FOUND"}, status=404)
-
-    except Exception:
-        # If unique constraint triggered by race condition
-        return JsonResponse(
-                {"message": "Duplicate callback ignored"}, status=200
-            )
-    return JsonResponse({"message": "Callback processed"}, status=200)

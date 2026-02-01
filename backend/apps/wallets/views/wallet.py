@@ -1,48 +1,85 @@
 from django.db.models import Sum, Q
-from django.shortcuts import render, redirect
-from apps.wallets.models.payment_related import WalletTransaction, Wallet, Invoice
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+from apps.wallets.models.payment_related import WalletTransaction
+from apps.wallets.models.payment import Payment
+from apps.wallets.serializers.payments_related import (
+    WalletDetailSerializer,
+    WalletTransactionListSerializer,
+)
 from utils.external_requests import pawapay_request
 from apps.wallets.services.transaction_service import WalletTransactionService
-from utils.exceptions import DuplicateTransaction
-from apps.wallets.models.payment import Payment
+from apps.wallets.services.wallet_service import WalletService
+from utils.exceptions import DuplicateTransaction, WalletNotFound
+from utils.authentication import RequireAPIKey
 
 
-
-def school_costs(request, slug):
+class WalletListView(APIView):
     """
-    A school admin can view invoices
+    API view for retrieving user's wallet details.
+    GET: Retrieve current user's wallet with transaction summaries.
     """
-    invoices = Invoice.objects.filter(
-        invoice_type="PLATFORM_FEE", school__admin=request.user
-    )
-    return render(
-        request, "billing/school/invoice_list.html", {"invoices": invoices})
+    permission_classes = [RequireAPIKey, IsAuthenticated]
+    serializer_class = WalletDetailSerializer
 
+    def get(self, request):
+        """Get current user's wallet details with transaction summaries."""
+        try:
+            wallet = WalletService.get_wallet_for_user(request.user)
+        except WalletNotFound:
+            return Response(
+                {"error": "User does not have a wallet"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-def transactions(request, slug):
-    try:
-        wallet = request.user.wallet
-    except Wallet.DoesNotExist:
-        return redirect("lipila:authorize", slug)
-    transactions = WalletTransaction.objects.filter(wallet=wallet).order_by(
-        "-created_at"
-    )[:10]
-    return render(
-        request, "wallets/transactions.html", {"transactions": transactions})
+        # Fetch recent CASH_IN transactions
+        transactions = WalletTransaction.objects.filter(
+            wallet=wallet, transaction_type="CASH_IN"
+        ).order_by("-created_at")[:10]
 
+        # Update payment statuses for incomplete payments
+        self._update_payment_statuses(wallet)
 
+        # Calculate totals for completed transactions
+        totals = WalletTransaction.objects.filter(
+            wallet=wallet, status="COMPLETED"
+        ).aggregate(
+            cash_in=Sum("amount", filter=Q(amount__gt=0)),
+            cash_out=Sum("amount",
+                        filter=Q(amount__lt=0) & Q(transaction_type="PAYOUT")),
+            cash_in_costs=Sum("amount",
+                            filter=Q(amount__lt=0) & Q(transaction_type="FEE")),
+        )
 
-def wallet_dashboard(request, slug):
-    try:
-        wallet = request.user.wallet
-    except Wallet.DoesNotExist:
-        return redirect("lipila:authorize", slug)
-    transactions = WalletTransaction.objects.filter(
-        wallet=wallet, transaction_type="CASH_IN"
-    ).order_by("-created_at")[:10]
-    payments = Payment.objects.filter(wallet=wallet)
-    # Request payment status if a user has incomplete payments
-    if payments:
+        # Serialize wallet details
+        serializer = WalletDetailSerializer(wallet)
+        wallet_data = serializer.data
+
+        # Add transaction summaries and recent transactions
+        wallet_data.update({
+            "cash_in": totals["cash_in"] or 0,
+            "cash_out": abs(totals["cash_out"] or 0),
+            "cash_in_costs": abs(totals["cash_in_costs"] or 0),
+            "recent_transactions": WalletTransactionListSerializer(
+                transactions, many=True
+            ).data,
+        })
+
+        return Response(
+            {"status": "success", "data": wallet_data},
+            status=status.HTTP_200_OK
+        )
+
+    def _update_payment_statuses(self, wallet):
+        """Helper method to update payment statuses from external provider."""
+        payments = Payment.objects.filter(wallet=wallet)
+
+        if not payments:
+            return
+
         for payment in payments:
             skip_statuses = [
                 "pending",
@@ -51,77 +88,78 @@ def wallet_dashboard(request, slug):
                 "processing",
                 "in_reconciliation",
             ]
-            status = payment.status
-            if status.lower() != "completed":
-                data, code = pawapay_request(
-                    "GET", f"/v2/deposits/{payment.id}")
-                if code == 200 and "data" in data:
-                    status = data["data"]["status"].lower()
-                    # Dont update status if pending/submitted
-                    # to avoid overwriting final state
+            payment_status = payment.status
 
-                    if status in skip_statuses:
-                        status = status
-                    payment.status = status
-                    payment.save()
-                    if status == "completed" and payment.wallet is not None:
+            if payment_status.lower() != "completed":
+                data, code = pawapay_request(
+                    "GET", f"/v2/deposits/{payment.id}"
+                )
+                if code == 200 and "data" in data:
+                    payment_status = data["data"]["status"].lower()
+
+                    if payment_status not in skip_statuses:
+                        payment.status = payment_status
+                        payment.save()
+
+                    # Process completed payment
+                    if payment_status == "completed" and payment.wallet is not None:
                         try:
                             WalletTransactionService.cash_in(
-                                wallet=payment.user.wallet,
+                                wallet=payment.wallet,
                                 amount=payment.amount,
                                 payment=payment,
                                 reference=payment.reference,
                             )
-                            try:
-                                invoice = Invoice.objects.filter(
-                                    payment=payment
-                                ).first()
-                                invoice.status = status
-                                invoice.save()
-                            except Exception:
-                                pass
                         except DuplicateTransaction:
                             pass
-                    try:
-                        invoice = Invoice.objects.filter(
-                            payment=payment).first()
-                        invoice.status = status
-                        invoice.save()
-                    except Exception:
-                        pass
 
-    totals = WalletTransaction.objects.filter(
-        wallet=wallet, status="COMPLETED"
-    ).aggregate(
-        cash_in=Sum("amount", filter=Q(amount__gt=0)),
-        cash_out=Sum("amount",
-                     filter=Q(amount__lt=0) & Q(transaction_type="PAYOUT")),
-        cash_in_costs=Sum("amount",
-                          filter=Q(amount__lt=0) & Q(transaction_type="FEE")),
-    )
+class WalletTransactionsView(APIView):
+    """
+    API view for retrieving wallet transactions.
+    GET: List recent wallet transactions with pagination and filtering.
+    """
+    permission_classes = [RequireAPIKey, IsAuthenticated]
+    serializer_class = WalletTransactionListSerializer
 
-    context = {
-        "wallet": wallet,
-        "wallet_balance": wallet.balance,
-        "cash_in": totals["cash_in"] or 0,
-        "cash_out": abs(totals["cash_out"] or 0),
-        "cash_in_costs": abs(totals["cash_in_costs"] or 0),
-        "transactions": transactions,
-    }
+    def get(self, request):
+        """
+        Get wallet transactions.
+        
+        Query parameters:
+            - transaction_type: Filter by CASH_IN, PAYOUT, REVERSAL, FEE
+            - status: Filter by PENDING, COMPLETED, FAILED
+            - limit: Number of results (default: 10)
+        """
+        try:
+            wallet = WalletService.get_wallet_for_user(request.user)
+        except WalletNotFound:
+            return Response(
+                {"error": "User does not have a wallet"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    return render(request, "wallets/dashboard.html", context)
+        # Build filter queryset
+        queryset = WalletTransaction.objects.filter(wallet=wallet)
 
+        # Apply optional filters
+        transaction_type = request.query_params.get("transaction_type")
+        if transaction_type:
+            queryset = queryset.filter(transaction_type=transaction_type)
 
+        tx_status = request.query_params.get("status")
+        if tx_status:
+            queryset = queryset.filter(status=tx_status)
 
-def wallet_authorize(request, slug):
-    # If wallet already exists, go straight to dashboard
-    if hasattr(request.user, "wallet"):
-        return redirect("lipila:wallet_dashboard", slug)
+        # Order by creation date (newest first) and apply limit
+        limit = int(request.query_params.get("limit", 10))
+        transactions = queryset.order_by("-created_at")[:limit]
 
-    if request.method == "POST":
-        # Create wallet safely
-        Wallet.objects.get_or_create(
-            user=request.user, defaults={"balance": 0})
-        return redirect("lipila:wallet_dashboard", slug)
-
-    return render(request, "wallets/authorize.html")
+        serializer = WalletTransactionListSerializer(transactions, many=True)
+        return Response(
+            {
+                "status": "success",
+                "count": queryset.count(),
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK
+        )

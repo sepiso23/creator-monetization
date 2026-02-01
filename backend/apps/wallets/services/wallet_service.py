@@ -18,7 +18,7 @@ class WalletService:
             WalletNotFound: If the user does not have a wallet.
         """
         try:
-            return user.wallet
+            return user.creator_profile.wallet
         except Wallet.DoesNotExist:
             raise WalletNotFound("User does not have a wallet")
 
