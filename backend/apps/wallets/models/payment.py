@@ -250,10 +250,6 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
 
     # Basic Information
     objects = PaymentManager()
-    user = models.ForeignKey(
-        User, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name="payments"
-    )
     wallet = models.ForeignKey(
         "Wallet",
         on_delete=models.CASCADE,
