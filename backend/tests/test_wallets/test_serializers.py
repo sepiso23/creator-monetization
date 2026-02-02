@@ -2,7 +2,7 @@
 Tests for payment-related serializers (Wallet, KYC, Transactions, etc.)
 """
 import pytest
-from apps.wallets.serializers.payments_related import (
+from apps.wallets.serializers import (
     WalletListSerializer,
     WalletDetailSerializer,
     WalletUpdateSerializer,
