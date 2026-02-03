@@ -1,5 +1,5 @@
 import pytest
-from tests.factories import APIClientFactory, UserFactory
+from tests.factories import APIClientFactory, UserFactory, PaymentFactory
 @pytest.mark.django_db
 class TestWalletViews:
     """Tests for wallet views"""
@@ -17,7 +17,7 @@ class TestWalletViews:
 
     def test_get_user_wallet(self, api_client, user_factory, mocker):
         """Test getting current user's wallet"""
-        mock_pawapay = mocker.patch("apps.wallets.views.wallet.pawapay_request")
+        mock_pawapay = mocker.patch("apps.wallets.views.pawapay_request")
         mock_pawapay.return_value = {"status": "completed"}
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
@@ -36,7 +36,7 @@ class TestWalletViews:
 
     def test_get_user_wallet_with_pending_payment(self, api_client, user_factory, mocker):
         """Test getting current user's wallet with pending payment"""
-        mock_pawapay = mocker.patch("apps.wallets.views.wallet.pawapay_request")
+        mock_pawapay = mocker.patch("apps.wallets.views.pawapay_request")
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
         user = user_factory
@@ -67,7 +67,7 @@ class TestWalletViews:
 
     def test_get_wallet_with_multiple_pending_payments(self, api_client, user_factory, mocker):
         """Test getting current user's wallet with multiple pending payments"""
-        mock_pawapay = mocker.patch("apps.wallets.views.wallet.pawapay_request")
+        mock_pawapay = mocker.patch("apps.wallets.views.pawapay_request")
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
         user = user_factory
