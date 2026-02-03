@@ -90,11 +90,18 @@ def payout_account_factory(user_factory):
 @pytest.fixture
 def wallet_transaction_factory(user_factory, payment_factory):
     """Create a test wallet transaction"""
-    from tests.factories import WalletTransactionFactory
-    return WalletTransactionFactory(
-        wallet=user_factory.creator_profile.wallet,
-        payment=payment_factory,
-    )
+    from tests.factories import WalletTransactionFactory as WalletTxn
+    def create_txn(**kwargs):
+        defaults = {
+            "wallet":user_factory.creator_profile.wallet,
+            "amount":0,
+            "payment": payment_factory,
+            "status": "PENDING"
+            }
+        defaults.update(kwargs)
+        instance = WalletTxn(**defaults)
+        return instance
+    yield create_txn
 
 
 @pytest.fixture

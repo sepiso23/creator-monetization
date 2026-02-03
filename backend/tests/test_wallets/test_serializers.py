@@ -20,7 +20,6 @@ from apps.wallets.serializers import (
     PaymentWebhookLogListSerializer,
     PaymentWebhookLogDetailSerializer,
 )
-from tests.factories import (UserFactory)
 pytestmark = pytest.mark.django_db
 
 # ========== WALLET SERIALIZER TESTS ==========
