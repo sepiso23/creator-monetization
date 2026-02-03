@@ -102,6 +102,13 @@ def wallet_txn_factory(user_factory, payment_factory):
         return instance
     yield create_txn
 
+@pytest.fixture
+def wallet_transaction_factory(user_factory, payment_factory):
+    from tests.factories import WalletTransactionFactory
+    return WalletTransactionFactory(
+        wallet=user_factory.creator_profile.wallet,
+        payment=payment_factory
+    )
 
 @pytest.fixture
 def txn_filter(db):

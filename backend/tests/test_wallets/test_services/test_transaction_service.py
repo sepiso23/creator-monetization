@@ -4,7 +4,6 @@ from apps.wallets.services.transaction_service import\
     WalletTransactionService as WalletTxnService
 from utils.exceptions import (
     InsufficientBalance, DuplicateTransaction, InvalidTransaction)
-from tests.factories import WalletTransactionFactory as WalletTxn
 class TestWalletService:
     """Test Single source of truth for all wallet money movements."""
 
@@ -18,13 +17,14 @@ class TestWalletService:
             wallet=user_factory.creator_profile.wallet,
             amount=Decimal("15.00"), payment=None, reference="B"
         )
-
+        # Only added to transactions if its finalized
         WalletTxnService.payout(
-            wallet=user_factory.creator_profile.wallet, amount=Decimal("3.00"), correlation_id="C"
+            wallet=user_factory.creator_profile.wallet,
+            amount=Decimal("3.00"), correlation_id="C"
         )
 
         user_factory.creator_profile.wallet.refresh_from_db()
-        assert user_factory.creator_profile.wallet.balance == Decimal("9.4")
+        assert user_factory.creator_profile.wallet.balance == Decimal("18.00")
 
     def test_cash_in_creates_transaction_and_updates_balance(self, user_factory):
         tx = WalletTxnService.cash_in(
@@ -35,7 +35,7 @@ class TestWalletService:
         )
         
         user_factory.creator_profile.wallet.refresh_from_db()
-        assert user_factory.creator_profile.wallet.balance == Decimal("19.4")
+        assert user_factory.creator_profile.wallet.balance == Decimal("18.00")
         assert tx.transaction_type == "CASH_IN"
         assert tx.status == "COMPLETED"
 
@@ -96,8 +96,8 @@ class TestWalletService:
             payout_tx=payout_tx, success=True)
 
         user_factory.creator_profile.wallet.refresh_from_db()
-        # cashin(50 - 3%) - cashout(k30) - fee(k10)= 8.5
-        assert user_factory.creator_profile.wallet.balance == Decimal("8.5")
+        # cashin(50 - 10%) - cashout(k30) - fee(k0)= 8.5
+        assert user_factory.creator_profile.wallet.balance == Decimal("15.00")
 
         payout_tx.refresh_from_db()
         assert payout_tx.status == "COMPLETED"
@@ -119,7 +119,7 @@ class TestWalletService:
             payout_tx=payout_tx, success=False)
 
         user_factory.creator_profile.wallet.refresh_from_db()
-        assert user_factory.creator_profile.wallet.balance == Decimal("38.8")
+        assert user_factory.creator_profile.wallet.balance == Decimal("36.00")
         payout_tx.refresh_from_db()
         assert payout_tx.status == "FAILED"
 
@@ -135,12 +135,12 @@ class TestWalletService:
             related_transaction=tx, transaction_type="FEE"
         )
 
-        assert fee_tx.amount == Decimal("-0.60")  # 3% fee
+        assert fee_tx.amount == Decimal("-2")  # 10% fee
         fees = tx.related_fees.all()
         assert fees.count() == 1
-        assert tx.wallet.balance == Decimal("19.4")
+        assert tx.wallet.balance == Decimal("18.00")
 
-    def test_payout_creates_single_fee(self, user_factory):
+    def test_payout_does_not_creates_fee(self, user_factory):
         WalletTxnService.cash_in(
             wallet=user_factory.creator_profile.wallet,
             amount=Decimal("100.00"),
@@ -155,7 +155,7 @@ class TestWalletService:
         )
 
         fees = payout_tx.related_fees.all()
-        assert fees.count() == 1
+        assert fees.count() == 0
 
     def test_finalize_payout_is_idempotent(self, user_factory):
         WalletTxnService.cash_in(
@@ -194,7 +194,11 @@ class TestWalletService:
             amount=Decimal("20.00"),
             correlation_id="PAYOUT-REVERSAL",
         )
-
+        WalletTxnService.create_fee_transaction(
+            wallet=user_factory.creator_profile.wallet,
+            amount=Decimal("5.00"),
+            related_transaction=payout_tx,
+            reference="reversal")
         WalletTxnService.finalize_payout(
             payout_tx=payout_tx, success=False)
 

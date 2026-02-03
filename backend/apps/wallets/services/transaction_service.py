@@ -125,14 +125,14 @@ class WalletTransactionService:
             reference=payout_reference,
             correlation_id=correlation_id,
         )
-
-        # Fee linked to payout
-        WalletTransactionService.create_fee_transaction(
-            wallet=wallet,
-            amount=payout_fee,
-            reference=f"{payout_reference}-FEE",
-            related_transaction=payout_tx,
-        )
+        if payout_fee > 0:
+            # Fee linked to payout
+            WalletTransactionService.create_fee_transaction(
+                wallet=wallet,
+                amount=payout_fee,
+                reference=f"{payout_reference}-FEE",
+                related_transaction=payout_tx,
+            )
 
         WalletService.recalculate_wallet_balance(wallet)
         return payout_tx

@@ -160,15 +160,15 @@ class TestWalletTransactionListSerializer:
         """Test serialization of transaction list"""
         serializer = WalletTransactionListSerializer(wallet_transaction_factory)
         data = serializer.data
-
+        assert data is not None
         assert data["id"] == str(wallet_transaction_factory.id)
         assert data["amount"] == str(wallet_transaction_factory.amount)
         assert data["transaction_type"] == wallet_transaction_factory.transaction_type
         assert "status" in data
 
-    def test_transaction_list_read_only_fields(self, wallet_transaction_factory):
+    def test_transaction_list_read_only_fields(self, wallet_txn_factory):
         """Test that all fields are read-only"""
-        serializer = WalletTransactionListSerializer(wallet_transaction_factory)
+        serializer = WalletTransactionListSerializer(wallet_txn_factory)
         assert serializer.fields["id"].read_only is True
         assert serializer.fields["status"].read_only is True
 
