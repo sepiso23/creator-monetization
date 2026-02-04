@@ -90,9 +90,6 @@ def payment_factory(user_factory):
     return PaymentFactory(
         wallet=user_factory.creator_profile.wallet,
         amount=Decimal("100.00"),
-        currency=Currency.ZMW,
-        status=PaymentStatus.PENDING,
-        provider=PaymentProvider.PAWAPAY,
     )
 
 

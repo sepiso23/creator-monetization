@@ -6,7 +6,7 @@ from apps.payments.serializers import PaymentListSerializer, PaymentSerializer
 class TestPaymentSerializer:
     """Test PaymentListSerializer"""
 
-    def test_serialize_payment_list(self, payment_factory):
+    def test_serialize_payment(self, payment_factory):
         """Test serialization of payment list"""
         serializer = PaymentSerializer(payment_factory)
         assert 'amount' in serializer.data

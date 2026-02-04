@@ -8,7 +8,7 @@ from apps.customauth.models import APIClient
 from apps.creators.models import CreatorProfile
 from apps.payments.models import Payment
 from apps.wallets.models import (
-    Wallet, WalletKYC, WalletPayoutAccount, WalletTransaction, Tier,
+    Wallet, WalletKYC, WalletPayoutAccount, WalletTransaction,
     PaymentAttempt, Refund, Dispute, PaymentWebhookLog,)
 
 User = get_user_model()
@@ -159,15 +159,11 @@ class PaymentFactory(factory.django.DjangoModelFactory):
     amount_captured = factory.LazyAttribute(lambda obj: 0)
     amount_refunded = factory.LazyAttribute(lambda obj: 0)
     status = "pending"
-    provider = "pawapay"
     isp_provider = "MTN_MOMO_ZMB"
-    payment_method = "mobile_money"
     patron_email = factory.Faker("email")
     patron_name = factory.Faker("name")
-    patron_phone = factory.Faker("phone_number")
-    order_reference = factory.Sequence(lambda n: f"ORD-{n}")
-    description = factory.Faker("text")
-    metadata = factory.Dict({"source": "api"})
+    patron_phone = "0003334455"
+    patron_message = "fake message"
     provider_fee = factory.Faker("pydecimal", left_digits=3, right_digits=2, min_value=0)
     net_amount = factory.LazyAttribute(lambda obj: obj.amount - (obj.provider_fee or 0))
     ip_address = factory.Faker("ipv4")

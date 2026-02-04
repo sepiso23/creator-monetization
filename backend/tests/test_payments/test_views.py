@@ -1,6 +1,5 @@
 import pytest
 from decimal import Decimal
-from tests.factories import APIClientFactory
 from apps.payments.models import Payment
 from apps.wallets.models import WalletTransaction
 
