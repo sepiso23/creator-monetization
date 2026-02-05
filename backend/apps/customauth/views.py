@@ -14,7 +14,8 @@ from .serializers import (
     ChangePasswordSerializer,
     CustomTokenRefreshSerializer
 )
-
+from drf_spectacular.utils import extend_schema
+from utils import serializers as helpers
 User = get_user_model()
 
 
@@ -22,7 +23,21 @@ class CustomTokenRefreshView(TokenRefreshView):
     """Custom JWT token refresh view."""
     permission_classes = [RequireAPIKey]
     serializer_class = CustomTokenRefreshSerializer
-
+    
+    @extend_schema(
+        operation_id="token_refresh",
+        summary="JWT Token Refresh",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to refresh JWT tokens.
@@ -37,11 +52,25 @@ class CustomTokenRefreshView(TokenRefreshView):
             })
         return response
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     """Custom JWT token obtain view."""
     permission_classes = [RequireAPIKey]
     serializer_class = CustomTokenObtainPairSerializer
-
+    @extend_schema(
+        operation_id="login",
+        summary="Login",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Login with email and password.
@@ -62,35 +91,24 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             })
         return response
 
-
-class TokenRefreshView(TokenRefreshView):
-    """JWT token refresh view."""
-    permission_classes = [RequireAPIKey]
-    serializer_class = TokenRefreshView.serializer_class
-
-    def post(self, request, *args, **kwargs):
-        """
-        Refresh an access token.
-
-        Exchanges a valid refresh token for a new access token.
-
-        Authentication
-        --------------
-        Public endpoint (token-based).
-        """
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            data = response.data
-            return Response({
-                'access_token': data['access'],
-            })
-        return response
-
-
 class UserRegistrationView(APIView):
     permission_classes = [RequireAPIKey]
     serializer_class = UserRegistrationSerializer
 
+    @extend_schema(
+        operation_id="register_user",
+        summary="Register User",
+        responses={
+            201: helpers.CreatedResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def post(self, request):
         """ Register a new user account (creator or patron).
 
@@ -117,26 +135,81 @@ class UserProfileView(APIView):
     serializer_class = UserSerializer
     permission_classes = [RequireAPIKey, IsAuthenticated]
 
+    @extend_schema(
+        operation_id="retrieve_profile",
+        summary="Retrieve User Profile",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def get(self, request):
         """Get user profile."""
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+    @extend_schema(
+        operation_id="update_profile",
+        summary="Update User Profile",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def put(self, request):
-        """Update user profile."""
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        """Fully Update user profile."""
+        serializer = UserSerializer(
+            request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'status': 'success',
+                 'data': serializer.data
+                 })
+        return Response({'status': 'failed',
+                         'errors': serializer.data
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        operation_id="partial_update_profile",
+        summary="Partial Profile Update",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def patch(self, request):
         """Partially update user profile."""
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(
+            request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'status': 'success',
+                 'data': serializer.data
+                 }
+            )
+        return Response({'status': 'failed',
+                         'errors': serializer.data
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
@@ -144,8 +217,22 @@ class ChangePasswordView(APIView):
     serializer_class = ChangePasswordSerializer
     permission_classes = [RequireAPIKey, IsAuthenticated]
 
+    @extend_schema(
+        operation_id="update_password",
+        summary="Change Password",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def post(self, request):
-        """Change password."""
+        """Allows an authenticated user to change their password"""
         serializer = ChangePasswordSerializer(
             request.user,
             data=request.data,
@@ -154,37 +241,54 @@ class ChangePasswordView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({
+                'status': 'success',
                 'message': 'Password changed successfully.'
             }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'failed',
+                         'errors': serializer.data
+                         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
     serializer_class = None
     permission_classes = [RequireAPIKey, IsAuthenticated]
-
+    @extend_schema(
+        operation_id="logout",
+        summary="Logout",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def post(self, request):
         """
             Logout / revoke refresh token (optional, recommended).
 
-            Invalidates the refresh token server-side (if supported). Access tokens
+            Invalidates the refresh token server-side. Access tokens
             typically expire naturally.
 
             Authentication
             --------------
             Requires authentication.
             """
-            
+
         try:
             refresh_token = request.data.get('refresh')
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
             return Response({
+                'status': 'success',
                 'message': 'Successfully logged out.'
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
+                'status': 'failed',
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
-

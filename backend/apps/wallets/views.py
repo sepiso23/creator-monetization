@@ -16,11 +16,26 @@ from apps.wallets.services.transaction_service import WalletTransactionService
 from apps.wallets.services.wallet_service import WalletService
 from utils.exceptions import DuplicateTransaction, WalletNotFound
 from utils.authentication import RequireAPIKey
-
+from drf_spectacular.utils import extend_schema
+from utils import serializers as helpers
 
 class WalletListView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletDetailSerializer
+    @extend_schema(
+        operation_id="retrieve__Wallet",
+        summary="Retrieve Users Wallet",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
 
     def get(self, request):
         """
@@ -122,7 +137,20 @@ class WalletListView(APIView):
 class WalletTransactionsView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletTransactionListSerializer
-
+    @extend_schema(
+        operation_id="list_wallet_transactions",
+        summary="Retrieve Wallet Transactions",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def get(self, request):
         """
         List transactions for the authenticated creator's wallet.
@@ -172,6 +200,20 @@ class WalletTransactionsView(APIView):
 class WalletKYCView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletKYCSerializer
+    @extend_schema(
+        operation_id="retrieve_wallet_details",
+        summary="Retrieve Wallet KYC",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def get(self, request):
         """
         Retrieve details for a specific wallet transaction.
@@ -197,7 +239,21 @@ class WalletKYCView(APIView):
             {"status": "success", "data": serializer.data},
             status=status.HTTP_200_OK
         )
-
+    
+    @extend_schema(
+        operation_id="update_wallet_kyc",
+        summary="Update Wallet KYC",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
     def put(self, request):
         """Update current user's wallet KYC information."""
         try:

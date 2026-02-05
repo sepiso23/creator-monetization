@@ -199,25 +199,9 @@ Creators can authenticate, manage their profile, and view their wallet balance a
 transaction history.
 
 Conventions
-- All money values are in ZMW (Kwacha). Use integers for amounts in ngwee where applicable,
-  or decimal ZMW consistently across the API (choose one and document it).
+- All money values are in ZMW (Kwacha). All amounta are converted to decimal(0.00) for consistency.
 - Authenticated endpoints require:
   Authorization: Bearer <access_token>
-- Common response envelope (recommended):
-  {
-    "success": true,
-    "data": {...},
-    "message": "Optional human-readable message"
-  }
-
-Error Handling
-- 400: Validation errors (missing fields, invalid amounts, invalid phone number)
-- 401: Not authenticated or invalid token
-- 403: Not authorized for resource
-- 404: Not found
-- 409: Conflict (duplicate transaction, idempotency collision)
-- 429: Rate limited
-- 500: Server error
 """
 SPECTACULAR_SETTINGS = {
     'TITLE': 'TipZed API',

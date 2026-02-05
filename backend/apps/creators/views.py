@@ -4,11 +4,25 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from apps.creators.models import CreatorProfile
 from apps.creators.serializers import CreatorPublicSerializer, CreatorListSerializer
-
+from drf_spectacular.utils import extend_schema
+from utils import serializers as helpers
 
 class CreatorPublicView(APIView):
     """API view to retrieve public creator profile data."""
     permission_classes = [AllowAny]
+    serializer_class = CreatorPublicSerializer
+
+    @extend_schema(
+        operation_id="retrieve_creator",
+        summary="Retrieve a Creator",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
 
     def get(self, request, slug: str) -> Response:
         """
@@ -43,11 +57,22 @@ class CreatorPublicView(APIView):
 
 
 class CreatorsListView(APIView):
-    
     permission_classes = [AllowAny]
+    serializer_class = CreatorListSerializer
+    @extend_schema(
+        operation_id="fetch_creators",
+        summary="Fetch Active Creators",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
 
     def get(self, request) -> Response:
-        """List public creators for discovery.
+        """List active public creators for discovery.
 
         Returns a paginated list of creators that are publicly visible. Supports
         search and filtering to help patrons discover creators by name, category,

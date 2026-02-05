@@ -11,9 +11,10 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = [
             "amount",
-            "isp_provider",
-            "patron_email",
             "patron_phone",
+            "provider",
+            "patron_email",
             "patron_message",
+            "metadata",
         ]
       

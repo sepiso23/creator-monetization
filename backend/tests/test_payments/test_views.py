@@ -14,7 +14,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "76555555566",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
             "patronmessage": 'test message'
         }
@@ -31,7 +31,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
             "patronmessage": 'test message',
             "patronEmail": "test@email.com",
@@ -46,7 +46,7 @@ class TestCashinViews:
 
         payments = Payment.objects.filter(wallet=wallet_factory)
         assert payments.count() == 1
-        assert payments.first().isp_provider == "MTN_MOMO_ZMB"
+        assert payments.first().provider == "MTN_MOMO_ZMB"
         assert payments.first().wallet == wallet_factory
 
         cashin_tx = WalletTransaction.objects.filter(
@@ -62,7 +62,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
         }
         response = auth_api_client.post(
@@ -75,7 +75,7 @@ class TestCashinViews:
 
         payments = Payment.objects.filter(wallet=wallet_factory)
         assert payments.count() == 1
-        assert payments.first().isp_provider == "MTN_MOMO_ZMB"
+        assert payments.first().provider == "MTN_MOMO_ZMB"
 
         cashin_tx = WalletTransaction.objects.filter(
             payment=payments.first()).first()
@@ -90,7 +90,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
         }
         response = auth_api_client.post(
@@ -104,7 +104,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
             "patronmessage": 'test message'
         }
@@ -118,7 +118,7 @@ class TestCashinViews:
         mock_request = mocker.patch("apps.payments.views.pawapay_request")
 
         data = {
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
             "patronmessage": 'test message'
         }
@@ -134,7 +134,7 @@ class TestCashinViews:
         mock_request = mocker.patch("apps.payments.views.pawapay_request")
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "patronmessage": 'test message'
         }
         response = auth_api_client.post(
@@ -154,7 +154,7 @@ class TestCashinViews:
         data = {
             "patronPhone": "7655555556",
             "amount": '',
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "patronmessage": 'test message'
         }
 
@@ -168,7 +168,7 @@ class TestCashinViews:
         data = {
             "patronPhone": "7655555556",
             "amount": 'one',
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "patronmessage": 'test message'
         }
 
@@ -182,7 +182,7 @@ class TestCashinViews:
         data = {
             "patronPhone": "invalid-phone",
             "amount": '10',
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "patronmessage": 'test message'
         }
 
@@ -197,7 +197,7 @@ class TestCashinViews:
         data = {
             "patronPhone": "",
             "amount": '10',
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "patronmessage": 'test message'
         }
 
@@ -225,7 +225,7 @@ class TestCashinViews:
         mock_request = mocker.patch("apps.payments.views.pawapay_request")
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": 'INVALID_DATA',
+            "provider": 'INVALID_DATA',
             "amount": "10",
             "patronmessage": 'test message'
         }
@@ -244,7 +244,7 @@ class TestCashinViews:
 
         data = {
             "patronPhone": "7655555556",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": "10",
             "patronmessage": 'test message',
             "patronEmail": "test@email.com",
@@ -274,7 +274,7 @@ class TestCashinViews:
         data = {
             "patronPhone": "7655555556",
             "payerEmail": "test@email.com",
-            "ispProvider": "MTN_MOMO_ZMB",
+            "provider": "MTN_MOMO_ZMB",
             "amount": large_amount,
         }
         response = auth_api_client.post(
@@ -294,7 +294,7 @@ class TestCashinViews:
         for i in range(3):
             data = {
                 "patronPhone": "7655555556",
-                "ispProvider": "MTN_MOMO_ZMB",
+                "provider": "MTN_MOMO_ZMB",
                 "amount": str(10 * (i + 1)),
                 "patronmessage": 'test message'
             }

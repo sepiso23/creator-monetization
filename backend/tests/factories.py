@@ -159,7 +159,7 @@ class PaymentFactory(factory.django.DjangoModelFactory):
     amount_captured = factory.LazyAttribute(lambda obj: 0)
     amount_refunded = factory.LazyAttribute(lambda obj: 0)
     status = "pending"
-    isp_provider = "MTN_MOMO_ZMB"
+    provider = "MTN_MOMO_ZMB"
     patron_email = factory.Faker("email")
     patron_name = factory.Faker("name")
     patron_phone = "0003334455"

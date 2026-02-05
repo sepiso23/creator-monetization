@@ -82,12 +82,12 @@ class PaymentAdmin(admin.ModelAdmin):
         "patron_phone",
         "amount",
         "currency",
-        "isp_provider",
+        "provider",
         "created_at",
     ]
     list_filter = [
         "status",
-        "isp_provider",
+        "provider",
         "currency",
         "created_at",
         "is_deleted",

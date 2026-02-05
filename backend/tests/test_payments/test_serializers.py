@@ -10,7 +10,7 @@ class TestPaymentSerializer:
         """Test serialization of payment list"""
 
         expected_fields = {
-            'patron_phone', 'patron_email', 'patron_message', 'amount','isp_provider',
+            'patron_phone', 'patron_email', 'patron_message', 'amount','provider',
         }
         serializer = PaymentSerializer(payment_factory)
         assert set(serializer.data.keys()) == expected_fields

@@ -9,31 +9,43 @@ from apps.payments.serializers import PaymentSerializer
 from apps.wallets.models import Wallet
 from utils.authentication import RequireAPIKey
 from utils.external_requests import pawapay_request
-
+from drf_spectacular.utils import extend_schema
+from utils import serializers as helpers
 
 User = get_user_model()
 
+
 class DepositAPIView(APIView):
-    """Handles public payments for a specific user"""
     permission_classes = [AllowAny, RequireAPIKey]
     serializer_class = PaymentSerializer
 
-    def post(self, request, id):
+    @extend_schema(
+        operation_id="send_tip",
+        summary="Send Tip",
+        responses={
+            201: helpers.CreatedResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        }
+    )
+    def post(self, request, wallet_id):
         """
-        Create a tip and initiate payment for a creator.
-
         Creates a tip intent and initiates a Mobile Money payment request. This
-        endpoint is called when a patron selects an amount (K10, K20, or custom)
-        and provides their phone number/provider details.
+        endpoint is called after a patron selects an amount (K10, K20, or custom)
+        provides their phone number and selects provider then clicks send.
 
         Authentication
         --------------
-        Guest tipping is supported currently.
+        Guest tipping is  currently supported.
         Optional:Authenticated patron(future).
-        
+
         If guest is supported, return a receipt without attaching a user identity.
         """
-
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid():
             from utils.validators import PhoneValidator as PV
@@ -41,11 +53,14 @@ class DepositAPIView(APIView):
             is_valid, msg = PV.validate_phone_number(phone)
             if not is_valid:
                 return Response(
-                {"status": "INVALID_DATA"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            wallet = get_object_or_404(Wallet, id=id)
-            
+                    {
+                        "status": "failed",
+                        "error": "validation_error",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            wallet = get_object_or_404(Wallet, id=wallet_id)
+
             with transaction.atomic():
                 payment = serializer.save(wallet=wallet)
 
@@ -56,8 +71,8 @@ class DepositAPIView(APIView):
                 "payer": {
                     "type": "MMO",
                     "accountDetails": {
-                        "provider": str(payment.isp_provider),
-                        "phoneNumber": str(payment.patron_phone),
+                        "provider": str(payment.provider),
+                        "phoneNumber": '26' + str(payment.patron_phone),
                     },
                 },
                 "customerMessage": f"Tipping {wallet.creator.user.username}",
@@ -79,14 +94,17 @@ class DepositAPIView(APIView):
                 payment.save()
                 serializer = PaymentSerializer(payment)
                 return Response(
-                    {"status": "ACCEPTED",
-                    "data": serializer.data
-                    },
+                    {"status": "accepted",
+                     "data": serializer.data
+                     },
                     status=status.HTTP_201_CREATED
                 )
-            return Response({"status":"ERROR"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({"status": "failed"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(
-            {"status": "INVALID_DATA"},
+            {
+                "status": "failed",
+                "error": "validation_error",
+            },
             status=status.HTTP_400_BAD_REQUEST
         )

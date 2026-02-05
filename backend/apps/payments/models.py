@@ -52,7 +52,7 @@ class PaymentProvider(models.TextChoices):
     LIPILA = "lipila", _("Lipila Online")
 
 
-class ISPPaymentProvider(models.TextChoices):
+class PaymentProvider(models.TextChoices):
     """Supported payment providers"""
 
     MTN_MOMO_ZMB = "MTN_MOMO_ZMB", _("MTN ZAMBIA")
@@ -296,12 +296,13 @@ class Payment(UUIDModel, TimeStampedModel, SoftDeleteModel):
         default=PaymentStatus.PENDING,
         db_index=True,
     )
-    isp_provider = models.CharField(
+    provider = models.CharField(
         max_length=30,
-        choices=ISPPaymentProvider.choices,
+        choices=PaymentProvider.choices,
         db_index=True,
     )
-    patron_phone = models.CharField(max_length=50)
+    patron_phone = models.CharField(
+        max_length=12, help_text=_("Zambia standard 10 digit mobile number"))
     patron_email = models.EmailField(
         null=True,
         blank=True,
