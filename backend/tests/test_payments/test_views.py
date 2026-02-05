@@ -42,7 +42,7 @@ class TestCashinViews:
         assert response.status_code == 201
         data = response.data
         assert data is not None
-        assert data['status'] == 'ACCEPTED'
+        assert data['status'] == 'accepted'
 
         payments = Payment.objects.filter(wallet=wallet_factory)
         assert payments.count() == 1
@@ -71,7 +71,7 @@ class TestCashinViews:
         assert response.status_code == 201
         data = response.data
         assert data is not None
-        assert data['status'] == 'ACCEPTED'
+        assert data['status'] == 'accepted'
 
         payments = Payment.objects.filter(wallet=wallet_factory)
         assert payments.count() == 1
@@ -143,7 +143,7 @@ class TestCashinViews:
         assert response.status_code == 400
         data = response.data
         assert data is not None
-        assert data['status'] == 'INVALID_DATA'
+        assert data['status'] == 'failed'
         payments = Payment.objects.all()
         assert payments.count() == 0
         assert wallet_factory.balance == 0
@@ -225,7 +225,7 @@ class TestCashinViews:
         mock_request = mocker.patch("apps.payments.views.pawapay_request")
         data = {
             "patronPhone": "7655555556",
-            "provider": 'INVALID_DATA',
+            "provider": 'INVALID_PROVIDER',
             "amount": "10",
             "patronmessage": 'test message'
         }
@@ -257,7 +257,7 @@ class TestCashinViews:
         assert response.status_code == 201
         data = response.data
         assert data is not None
-        assert data['status'] == 'ACCEPTED'
+        assert data['status'] == 'accepted'
 
   
     def test_payment_with_very_large_amount(self, auth_api_client, wallet_factory, mocker):
