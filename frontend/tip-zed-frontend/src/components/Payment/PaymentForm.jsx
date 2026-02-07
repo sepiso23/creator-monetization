@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, Lock, Edit2 } from "lucide-react";
-import { detectProvider, PROVIDERS } from "../../utils/mobileMoney";
+import { detectProvider, PROVIDERS } from "@/utils/mobileMoney";
 
 const PROVIDERS_ARRAY = Object.values(PROVIDERS);
 

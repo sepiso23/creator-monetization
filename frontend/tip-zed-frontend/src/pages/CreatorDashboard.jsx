@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import DashboardLayout from "../layouts/DashboardLayout";
-import { useAuth } from "../hooks/useAuth";
-import { getWalletData } from "../services/walletService";
+import DashboardLayout from "@/layouts/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
+import { getWalletData } from "@/services/walletService";
 import { Eye, TrendingUp, DollarSign, Calendar, User } from "lucide-react";
 
 const CreatorDashboard = () => {

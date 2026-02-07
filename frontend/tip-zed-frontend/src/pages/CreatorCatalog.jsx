@@ -9,7 +9,7 @@ import {
   UserX,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { creatorService } from "../services/creatorService";
+import { creatorService } from "@/services/creatorService";
 
 const getName = (creator) =>
   `${creator.user?.firstName || ""} ${creator.user?.lastName || ""}`.trim() ||

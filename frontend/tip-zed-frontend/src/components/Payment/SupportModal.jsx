@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import AmountSelector from "./AmountSelector";
-import PaymentForm from "./PaymentForm";
-import PaymentStatus from "./PaymentStatus";
-import { paymentService } from "../../services/paymentService";
+import AmountSelector from "@/components/Payment/AmountSelector";
+import PaymentForm from "@/components/Payment/PaymentForm";
+import PaymentStatus from "@/components/Payment/PaymentStatus";
+import { paymentService } from "@/services/paymentService";
 
 const SupportModal = ({ isOpen, onClose, creator }) => {
   const [step, setStep] = useState("AMOUNT"); // AMOUNT | PHONE | PROCESSING | SUCCESS | ERROR

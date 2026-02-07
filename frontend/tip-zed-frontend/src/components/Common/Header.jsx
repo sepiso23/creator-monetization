@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import logo from '../../assets/images/logo.png';
+import { useAuth } from "@/hooks/useAuth";
+import logo from '@/assets/images/logo.png';
 
 const Header = () => {
   const location = useLocation();
@@ -24,7 +24,6 @@ const Header = () => {
         <div className="flex justify-between h-16 items-center">
           {/* Logo - Click to go Home */}
           <Link to="/" className="flex items-center">
-            {/* You can add a real <img> logo here later */}
           <img className="h-12 w-12" src={logo} alt="Logo"/ >;
             <span className="bg-gradient-to-r from-green-600 via-yellow-600 to-orange-500 bg-clip-text text-transparent font-bold text-3xl">TipZed</span>
           </Link>

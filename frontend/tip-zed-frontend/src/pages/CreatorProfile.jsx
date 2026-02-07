@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { AlertCircle, Loader } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import { creatorService } from "../services/creatorService";
-import SupportModal from "../components/Payment/SupportModal";
+import { creatorService } from "@/services/creatorService";
+import SupportModal from "@/components/Payment/SupportModal";
 
 const getName = (creator) =>
   `${creator.user?.firstName || ""} ${creator.user?.lastName || ""}`.trim() ||
