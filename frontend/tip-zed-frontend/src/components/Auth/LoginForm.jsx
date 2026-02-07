@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth"; // Note: Adjust path if your hook is elsewhere
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const LoginForm = () => {
   const { login } = useAuth();
@@ -7,12 +8,14 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // VALIDATE PASSWORD (Logic moved here)
+    // VALIDATE PASSWORD
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters long.");
       return;
@@ -23,11 +26,10 @@ const LoginForm = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      alert("Login Successful!");
-      // TODO: Add navigation here later, e.g., navigate('/dashboard')
-    } else {
-      setError(result.error);
-    }
+      const from = location.state?.from?.pathname || "/";
+
+      navigate(from, { replace: true });
+    } else setError(result.error);
 
     setIsLoading(false);
   };
@@ -43,7 +45,9 @@ const LoginForm = () => {
 
       {/* Email Input */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Email Address
+        </label>
         <input
           type="email"
           required
@@ -56,13 +60,17 @@ const LoginForm = () => {
 
       {/* Password Input */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Password
+        </label>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
             required
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-zed-green focus:border-transparent outline-none transition-all"
             placeholder="••••••••"
           />

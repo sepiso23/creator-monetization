@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const SignupForm = () => {
   const { register } = useAuth();
@@ -8,13 +9,14 @@ const SignupForm = () => {
     password: "",
     password2: "",
     username: "",
-    user_type: "creator",
-    first_name: "",
-    last_name: "",
+    userType: "creator",
+    firstName: "",
+    lastName: "",
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -45,12 +47,8 @@ const SignupForm = () => {
 
     const result = await register(formData);
 
-    if (result.success) {
-      alert("Account created!");
-      // TODO: Add redirect logic here later
-    } else {
-      setError(result.error);
-    }
+    if (result.success) navigate("/login");
+    else setError(result.error);
 
     setIsSubmitting(false);
   };
@@ -66,10 +64,10 @@ const SignupForm = () => {
       {/* <div>
         <label className="text-sm font-medium text-gray-600">First Name</label>
         <input
-          name="first_name"
+          name="firstName"
           required
           className="mt-1 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-zed-orange focus:border-zed-orange outline-none"
-          value={formData.first_name}
+          value={formData.firstName}
           onChange={handleChange}
         />
       </div> */}
@@ -77,10 +75,10 @@ const SignupForm = () => {
       {/* <div>
         <label className="text-sm font-medium text-gray-600">Last Name</label>
         <input
-          name="last_name"
+          name="lastName"
           required
           className="mt-1 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-zed-orange focus:border-zed-orange outline-none"
-          value={formData.last_name}
+          value={formData.lastName}
           onChange={handleChange}
         />
       </div> */}
@@ -111,9 +109,9 @@ const SignupForm = () => {
       {/* <div>
         <label className="text-sm font-medium text-gray-600">I am a...</label>
         <select
-          name="user_type"
+          name="userType"
           className="mt-1 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-zed-orange focus:border-zed-orange outline-none"
-          value={formData.user_type}
+          value={formData.userType}
           onChange={handleChange}
         >
           <option value="creator">Creator</option>
