@@ -1,8 +1,0 @@
-[build]
-  base = "frontend/tip-zed-frontend"
-  command = "npm run build"
-  publish = "frontend/tip-zed-frontend/dist"
-
-[build.environment]
-  NODE_VERSION = "20"
-
