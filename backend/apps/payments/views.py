@@ -75,7 +75,7 @@ class DepositAPIView(APIView):
                         "phoneNumber": '26' + str(payment.patron_phone),
                     },
                 },
-                "customerMessage": f"Tipping {wallet.creator.user.username}",
+                "customerMessage": "Tipping at TipZed",
                 "clientReferenceId": payment.reference,
                 "metadata": [
                     {
@@ -87,7 +87,6 @@ class DepositAPIView(APIView):
 
             data, code = pawapay_request(
                 "POST", "/v2/deposits/", payload=payload)
-
             if code == 200:
                 status_lower = data.get("status", "").lower()
                 payment.status = status_lower
