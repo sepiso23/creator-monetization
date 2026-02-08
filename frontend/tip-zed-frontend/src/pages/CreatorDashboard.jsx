@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
-import { getWalletData } from "@/services/walletService";
+import { getWalletData, getWalletTxnData } from "@/services/walletService";
 import { Eye, TrendingUp, DollarSign, Calendar, User } from "lucide-react";
 
 const CreatorDashboard = () => {
@@ -11,6 +11,7 @@ const CreatorDashboard = () => {
   const isTransactionsView = location.pathname === "/dashboard/transactions";
 
   const [data, setData] = useState(null);
+  const [txnData, setTxnData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
@@ -26,6 +27,25 @@ const CreatorDashboard = () => {
       } catch (err) {
         console.error("Error fetching wallet data:", err);
         setError("Failed to load wallet data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [page]); // Re-fetch when page changes
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Pass page parameter to the API call
+        const response = await getWalletTxnData({ page, limit: 10 });
+        setTxnData(response);
+      } catch (err) {
+        console.error("Error fetching wallet transactions data:", err);
+        setError("Failed to load wallet transactions data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -70,13 +90,13 @@ const CreatorDashboard = () => {
   }
 
   return (
-    <DashboardLayout title={user.username ?? ""}>
+    <DashboardLayout title={user?.data.username ?? ""}>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
           {isTransactionsView
             ? "Transaction History"
-            : `Welcome back, ${user?.username || "Creator"}!`}
+            : `Welcome back, ${user?.data.username || "Creator"}!`}
         </h1>
         <p className="text-gray-500">
           {isTransactionsView
@@ -113,7 +133,7 @@ const CreatorDashboard = () => {
                   Total Earnings
                 </p>
                 <h3 className="text-2xl font-bold text-gray-900 mt-2">
-                  {data?.currency || 'ZMW'} {data?.totalEarnings?.toLocaleString() || '0'}
+                  {data?.currency || 'ZMW'} {txnData?.cashIn?.toLocaleString() || '0'}
                 </h3>
               </div>
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
@@ -169,40 +189,40 @@ const CreatorDashboard = () => {
                   Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Txn Type
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data?.transactions?.length > 0 ? (
-                data.transactions.map((txn) => (
+              {txnData?.length > 0 ? (
+                txnData.map((txn) => (
                   <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar size={16} className="mr-2 text-gray-400" />
-                        {new Date(txn.date).toLocaleDateString()}
+                        {new Date(txn.createdAt).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       <div className="flex items-center">
                         <User size={16} className="mr-2 text-gray-400" />
-                        {txn.supporter?.name || "Anonymous"}
+                        {txn.patronPhone || "Anonymous"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
-                      {data.currency || 'ZMW'} {txn.amount?.toFixed(2)}
+                      {data?.currency || 'ZMW'} {txn.amount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          txn.status === "completed"
+                          txn.transactionType === "CASH_IN"
                             ? "bg-green-100 text-green-800"
-                            : txn.status === "pending"
+                            : txn.transactionType === "FEE"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {txn.status}
+                        {txn.transactionType}
                       </span>
                     </td>
                   </tr>
