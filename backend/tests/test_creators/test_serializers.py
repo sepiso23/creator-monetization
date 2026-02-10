@@ -1,6 +1,19 @@
 import pytest
-from tests.factories import UserFactory
-from apps.creators.serializers import CreatorPublicSerializer, CreatorListSerializer
+from tests.factories import UserFactory, CreatorCategoryFactory
+from apps.creators.serializers import (
+    CreatorPublicSerializer,
+    CreatorListSerializer,
+    CreatorCategorySerializer)
+from apps.creators.models import CreatorCategory
+
+@pytest.mark.django_db
+class TestCreatoryCategorySerializer:
+    def test_creator_category_serializer_fields(self, category_factory):
+        serializer = CreatorCategorySerializer(category_factory)
+        expected_fields = {
+            'name', 'slug', 'icon', 'is_featured', 'country_code', 'is_active'
+            }
+        assert set(serializer.data.keys()) == expected_fields
 
 
 @pytest.mark.django_db
@@ -10,18 +23,34 @@ class TestCreatorPublicSerializer:
     def test_creator_serializer_fields(self, user_factory):
         """Test that the serializer includes all expected fields."""
         profile = user_factory.creator_profile
-        
+
         serializer = CreatorPublicSerializer(profile)
         data = serializer.data
 
         expected_fields = {
             'user', 'bio', 'profile_image', 'cover_image', 'website',
             'followers_count', 'rating', 'verified', 'status',
-            'created_at', 'updated_at', "wallet_id",
+            'created_at', 'updated_at', "wallet_id", "categories"
         }
 
         assert set(data.keys()) == expected_fields
-        
+
+    def test_creator_public_serializer_contains_categories(self, user_factory):
+        """Test serialization of creator profile public data."""
+        CreatorCategoryFactory.create_batch(2)
+        c1 = CreatorCategory.objects.order_by('id').first()
+        c2 = CreatorCategory.objects.order_by('id').last()
+        profile = user_factory.creator_profile
+        profile.categories.set([c1, c2])
+
+        serializer = CreatorPublicSerializer(profile)
+        data = serializer.data
+        assert data['categories'] is not None
+        assert len(data['categories']) == 2
+        assert data['categories'][0]['name'] == c1.name
+        assert data['categories'][0]['slug'] == c1.slug
+        assert data['categories'][1]['name'] == c2.name
+        assert data['categories'][1]['slug'] == c2.slug
 
     def test_creator_public_serializer(self, user_factory):
         """Test serialization of creator profile public data."""
@@ -30,7 +59,7 @@ class TestCreatorPublicSerializer:
         profile.followers_count = 150
         profile.rating = 4.5
         profile.save()
-        
+
         serializer = CreatorPublicSerializer(profile)
         data = serializer.data
         assert data['wallet_id'] == profile.wallet.id
@@ -42,13 +71,13 @@ class TestCreatorPublicSerializer:
         assert data['bio'] == "This is a test bio."
         assert data['followers_count'] == 150
         assert data['rating'] == 4.5
+        assert data['categories'] == []
         assert 'created_at' in data
         assert 'updated_at' in data
         assert data['website'] == profile.website
         # Remove asset keyword. The utility function itself handles assertions.
         data['profile_image'] == profile.profile_image.url if profile.profile_image else None
         data['cover_image'] == profile.cover_image.url if profile.cover_image else None
-
 
     def test_list_creator_public_serializer(self):
         """Test serialization of multiple creator profiles."""
@@ -70,9 +99,9 @@ class TestCreatorPublicSerializer:
             assert data[i]['rating'] == profiles[i].rating
             assert 'created_at' in data[i]
             assert 'updated_at' in data[i]
+            assert 'categories' in data[i]
             assert data[i]['website'] == profiles[i].website
-            
-            
+
     def test_creator_public_serializer_with_verified_profile(self, user_factory):
         """Test serialization of a verified creator profile."""
         profile = user_factory.creator_profile
