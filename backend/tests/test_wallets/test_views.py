@@ -29,7 +29,9 @@ class TestWalletViews:
         assert "id" in data
         assert "balance" in data
         assert "is_active" in data
-        assert "currency" in data
+        assert "recent_transactions" in data
+        assert "cash_in_costs" in data
+        
 
         # check that pawapay was not called no pending payments
         mock_pawapay.assert_not_called()
