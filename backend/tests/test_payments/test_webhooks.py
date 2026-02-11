@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from decimal import Decimal
-from apps.payments.models import Payment, PaymentWebhookLog
+from apps.payments.models import PaymentWebhookLog
 from apps.wallets.models import Wallet, WalletTransaction
 from tests.factories import PaymentFactory
 
@@ -17,24 +17,23 @@ class TestPaymentWebhookView:
     def test_completed_deposit_credits_wallet(self, api_client, payment_factory):
         """Test that a completed deposit callback credits the wallet
         and records transactions"""
-        payment = payment_factory()
-        wallet = payment.wallet
+        wallet = payment_factory.wallet
 
         payload = {
-            "depositId": str(payment.id),
+            "depositId": str(payment_factory.id),
             "status": "COMPLETED",
-            "amount": payment.amount,
+            "amount": payment_factory.amount,
             "providerTransactionId": "ABC123",
         }
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
         wallet.refresh_from_db()
-        assert wallet.balance == payment.amount
+        assert wallet.balance == payment_factory.amount
         assert WalletTransaction.objects.filter(
             wallet=wallet, transaction_type="CASH_IN"
         ).exists()
@@ -45,20 +44,20 @@ class TestPaymentWebhookView:
             wallet=wallet, transaction_type="PAYOUT"
         ).exists()
         assert PaymentWebhookLog.objects.filter(
-            payment=payment,
+            payment=payment_factory,
             provider="pawapay",
             external_id="ABC123",
             event_type="deposit.completed",
         ).exists()
         assert PaymentWebhookLog.objects.filter(
-            payment=payment,
+            payment=payment_factory,
             provider="pawapay",
             external_id="ABC123",
             event_type="deposit.completed",
-        ).first().parsed_payload["amount"] == str(payment.amount)
+        ).first().parsed_payload["amount"] == str(payment_factory.amount)
         assert (
             PaymentWebhookLog.objects.filter(
-                payment=payment,
+                payment=payment_factory,
                 provider="pawapay",
                 external_id="ABC123",
                 event_type="deposit.completed",
@@ -72,7 +71,7 @@ class TestPaymentWebhookView:
             wallet=wallet, transaction_type="CASH_IN"
         ).first()
         assert cash_in_tx is not None
-        assert cash_in_tx.payment == payment
+        assert cash_in_tx.payment == payment_factory
 
     def test_deposit_callback_is_idempotent_requests(self, api_client, user, wallet):
         deposit_id = uuid.uuid4()
@@ -146,7 +145,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
 
@@ -190,7 +189,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -291,7 +290,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -325,7 +324,7 @@ class TestPaymentWebhookView:
 
             response = api_client.post(
                 reverse("payments:webhook"),
-                data=json.dumps(payload),
+                payload,
                 content_type="application/json",
             )
             assert response.status_code == 200
@@ -363,7 +362,7 @@ class TestPaymentWebhookView:
 
             response = api_client.post(
                 reverse("payments:webhook"),
-                data=json.dumps(payload),
+                payload,
                 content_type="application/json",
             )
             assert response.status_code == 200
@@ -391,7 +390,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
 
@@ -408,7 +407,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
 
@@ -432,7 +431,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
 
@@ -467,7 +466,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -550,7 +549,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
@@ -579,7 +578,7 @@ class TestPaymentWebhookView:
         initial_tx_count = WalletTransaction.objects.count()
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         final_tx_count = WalletTransaction.objects.count()
@@ -610,7 +609,7 @@ class TestPaymentWebhookView:
 
         response = api_client.post(
             reverse("payments:webhook"),
-            data=json.dumps(payload),
+            payload,
             content_type="application/json",
         )
         assert response.status_code == 200
