@@ -71,7 +71,7 @@ const Header = () => {
 
           <div className="flex items-center space-x-4">
             {/* Non-authenticated state */}
-            {!user && !isAuthPage && (
+            {!user && (
               <div className="flex items-center space-x-2">
                 <Link
                   to="/creator-catalog"
@@ -80,10 +80,10 @@ const Header = () => {
                   Creators
                 </Link>
                 <Link
-                  to="/login"
+                  to={pathname === "/login" ? "/register" : "/login"}
                   className="bg-zed-orange text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-orange-600 transition-colors"
                 >
-                  Login
+                  {pathname === "/login" ? "Sign Up" : "Login"}
                 </Link>
               </div>
             )}
