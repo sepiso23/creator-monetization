@@ -74,16 +74,16 @@ const Header = () => {
             {!user && !isAuthPage && (
               <div className="flex items-center space-x-2">
                 <Link
-                  to="/login"
+                  to="/creator-catalog"
                   className="text-gray-600 hover:text-zed-green font-medium px-3 py-2"
                 >
-                  Login
+                  Creators
                 </Link>
                 <Link
-                  to="/register"
+                  to="/login"
                   className="bg-zed-orange text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-orange-600 transition-colors"
                 >
-                  Sign Up
+                  Login
                 </Link>
               </div>
             )}
