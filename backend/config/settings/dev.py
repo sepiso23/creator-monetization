@@ -41,6 +41,7 @@ CORS_ALLOW_HEADERS = (
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -124,6 +125,15 @@ SOCIALACCOUNT_PROVIDERS = {
         'VERSION': 'v13.0',
     }
 }
+
+AUTH_KIT = {
+    'SOCIAL_LOGIN_SERIALIZER': 'apps.customauth.serializers.CustomSocialLoginSerializer',
+}
+
+# SOCIALACCOUNT_ADAPTER = 'apps.customauth.adapters.CustomSocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+DEFAULT_USER_TYPE = 'creator'  # Default user type for new users
 
 ROOT_URLCONF = 'config.urls'
 
