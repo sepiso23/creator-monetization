@@ -279,7 +279,7 @@ class TestPublicCreatorProfile:
         
         assert data["profile_image"] == expected_url
 
-    def test_list_creator_profiles_view(self, api_client):
+    def test_list_creator_profiles_view(self, auth_api_client):
         """Test the view that lists all creator profiles."""
         # Create multiple creator profiles
         users = UserFactory.create_batch(3)
@@ -287,7 +287,7 @@ class TestPublicCreatorProfile:
 
         url = reverse("creators:creator_profiles_list")
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         content = response.content.decode()
@@ -296,13 +296,13 @@ class TestPublicCreatorProfile:
             assert profile.user.last_name in content
             assert "bio" in content
 
-    def test_creator_public_view(self, api_client, user_factory):
+    def test_creator_public_view(self, auth_api_client, user_factory):
         """Test the public view of a creator profile."""
         creator_profile = user_factory.creator_profile
 
         url = reverse("creators:creator_public_view", args=[creator_profile.user.slug])
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         assert creator_profile.user.first_name in response.content.decode()
@@ -325,15 +325,15 @@ class TestPublicCreatorProfile:
         assert profile_image_url in response.content.decode()
         assert cover_image_url in response.content.decode()
 
-    def test_creator_public_view_not_found(self, api_client):
+    def test_creator_public_view_not_found(self, auth_api_client):
         """Test that a non-existent creator profile returns 404."""
         url = reverse("creators:creator_public_view", args=["non-existent-slug"])
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 404
 
-    def test_creator_public_view_inactive_profile(self, api_client, user_factory):
+    def test_creator_public_view_inactive_profile(self, auth_api_client, user_factory):
         """Test that an inactive creator profile returns 404."""
         creator_profile = user_factory.creator_profile
         creator_profile.status = "inactive"
@@ -341,11 +341,11 @@ class TestPublicCreatorProfile:
 
         url = reverse("creators:creator_public_view", args=[creator_profile.user.slug])
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 404
 
-    def test_creator_public_view_content(self, api_client, user_factory):
+    def test_creator_public_view_content(self, auth_api_client, user_factory):
         """Test that the creator public view displays correct content."""
         creator_profile = user_factory.creator_profile
         creator_profile.bio = "This is a test bio for the creator."
@@ -354,27 +354,27 @@ class TestPublicCreatorProfile:
 
         url = reverse("creators:creator_public_view", args=[creator_profile.user.slug])
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         content = response.content.decode()
         assert "This is a test bio for the creator." in content
         assert "https://example.com" in content
 
-    def test_creator_public_view_multiple_profiles(self, api_client):
+    def test_creator_public_view_multiple_profiles(self, auth_api_client):
         """Test that multiple creator profiles can be accessed correctly."""
         users = UserFactory.create_batch(5)
         profiles = [user.creator_profile for user in users]
 
         for profile in profiles:
             url = reverse("creators:creator_public_view", args=[profile.user.slug])
-            response = api_client.get(url)
+            response = auth_api_client.get(url)
             assert response.status_code == 200
             assert profile.user.first_name in response.content.decode()
             assert profile.user.last_name in response.content.decode()
             assert "bio" in response.content.decode()
 
-    def test_creator_public_view_slug_case_insensitivity(self, api_client, user_factory):
+    def test_creator_public_view_slug_case_insensitivity(self, auth_api_client, user_factory):
         """Test that the creator public view is case insensitive regarding slugs."""
         creator_profile = user_factory.creator_profile
 
@@ -382,28 +382,28 @@ class TestPublicCreatorProfile:
             "creators:creator_public_view", args=[creator_profile.user.slug.upper()]
         )
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         assert creator_profile.user.first_name in response.content.decode()
         assert creator_profile.user.last_name in response.content.decode()
         assert "bio" in response.content.decode()
 
-    def test_creator_public_view_special_characters_in_slug(self, api_client, user_factory):
+    def test_creator_public_view_special_characters_in_slug(self, auth_api_client, user_factory):
         """Test that the creator public view handles special characters in slugs."""
         creator_profile = user_factory.creator_profile
         creator_profile.user.slug = "specialchar_slug-123"
         creator_profile.user.save()
 
         url = reverse("creators:creator_public_view", args=[creator_profile.user.slug])
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         assert creator_profile.user.first_name in response.content.decode()
         assert creator_profile.user.last_name in response.content.decode()
         assert "bio" in response.content.decode()
 
-    def test_creator_public_view_redirects(self, api_client, user_factory):
+    def test_creator_public_view_redirects(self, auth_api_client, user_factory):
         """Test that the creator public view redirects correctly if needed."""
         creator_profile = user_factory.creator_profile
 
@@ -412,7 +412,7 @@ class TestPublicCreatorProfile:
             + "?ref=homepage"
         )
 
-        response = api_client.get(url)
+        response = auth_api_client.get(url)
 
         assert response.status_code == 200
         assert creator_profile.user.first_name in response.content.decode()
