@@ -56,6 +56,48 @@ class TestLoginRateLimiting:
         response = api_client.post(login_url, login_data, format='json')
         assert response.status_code == status.HTTP_200_OK
 
+    def test_login_rate_limit_different_users(self, api_client):
+        """Test login rate limit is per user."""
+        email1 = 'user1@example.com'
+        email2 = 'user2@example.com'
+        UserFactory(email=email1, password='TestPass123!')
+        UserFactory(email=email2, password='TestPass123!')
+
+        # Attempt login for both users to exceed rate limit
+        login_url = reverse('customauth:login')
+        client = APIClientFactory()
+        api_client.credentials(HTTP_X_API_KEY=client.api_key)
+        for _ in range(6):  # Exceed the rate limit
+            login_data = {'email': email1, 'password': 'WrongPass123!'}
+            api_client.post(login_url, login_data, format='json')
+
+        # Verify login fails for user1 after exceeding rate limit
+        login_data = {'email': email1, 'password': 'TestPass123!'}
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+        # Verify login failes for user2 same IP used but different email
+        login_data = {'email': email2, 'password': 'TestPass123!'}
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+    def test_login_after_third_attempt_succeeds(self, api_client):
+        """Test login success fails after 3 failed attempts. before hitting the rate limit. """
+        email = 'test@example.com'
+        UserFactory(email=email, password='TestPass123!')
+        login_url = reverse('customauth:login')
+        client = APIClientFactory()
+        api_client.credentials(HTTP_X_API_KEY=client.api_key)
+        for _ in range(2):  # 2 failed attempts
+            login_data = {'email': email, 'password': 'WrongPass123!'}
+            api_client.post(login_url, login_data, format='json')
+        # Verify login still succeeds on 4th attempt (before hitting rate limit)
+        login_data = {'email': email, 'password': 'TestPass123!'}
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_200_OK
+       
+
 @pytest.mark.django_db
 class TestUserRegistrationView:
     """Test user registration endpoint."""
@@ -150,8 +192,8 @@ class TestUserRegistrationView:
 
 
 @pytest.mark.django_db
-class TestTokenObtainView:
-    """Test JWT token obtain endpoint."""
+class TestCustomLoginView:
+    """Test email/password login endpoint."""
 
     def test_login_success(self, api_client):
         """Test successful login."""

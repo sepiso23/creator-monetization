@@ -58,7 +58,7 @@ class CustomLoginView(TokenObtainPairView):
     """Custom Login view Using Email and Password"""
     permission_classes = [RequireAPIKey]
     serializer_class = CustomLoginSerializer
-    throttle_classes = [AnonRateThrottle]
+    # throttle_classes = [AnonRateThrottle]
     throttle_scope = 'login_attempts'
 
     @extend_schema(

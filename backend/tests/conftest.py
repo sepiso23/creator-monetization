@@ -4,14 +4,16 @@ Pytest configuration and fixtures.
 import os
 import pytest
 from decimal import Decimal
-
-
 from apps.wallets.models import WalletTransaction as WTxn
-def pytest_configure():
-    """Configure pytest settings."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.dev')
-    import django
-    django.setup()
+
+
+@pytest.fixture(scope='function', autouse=True)
+def clear_cache():
+    """Clear cache before and after tests."""
+    from django.core.cache import cache
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture

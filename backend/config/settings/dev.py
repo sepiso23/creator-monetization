@@ -238,13 +238,12 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
-        'apps.customauth.throttling.PremiumUserThrottle',
+        'apps.customauth.throttling.LoginAttempsRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
-        'premium': '5000/day',
-        'login_attempts': '5/hour',
+        'login_attempts': '5/minute',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES':(
@@ -255,6 +254,14 @@ REST_FRAMEWORK = {
         'djangorestframework_camel_case.parser.CamelCaseJSONParser',
     ),
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+        "LOCATION": "127.0.0.1:11211",
+    }
+}
+
 
 # -------------------
 # Security Headers

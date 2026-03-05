@@ -6,7 +6,10 @@ class LoginResponseSerializer(serializers.Serializer):
 
     Used to return user access and refresh tokens upon successful login.
     """
-    user = serializers.JSONBoundField()
+    user = serializers.DictField(
+        child=serializers.CharField(),
+        help_text="Authenticated user details",
+    )
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
 
@@ -16,7 +19,10 @@ class RegistrationResponseSerializer(serializers.Serializer):
 
     Used to return newly created user access and refresh tokens upon successful registration.
     """
-    user = serializers.JSONBoundField()
+    user = serializers.DictField(
+        child=serializers.CharField(),
+        help_text="Authenticated user details",
+    )
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
 
