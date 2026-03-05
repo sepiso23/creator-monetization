@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    CustomTokenObtainPairView,
+    CustomLoginView,
     UserRegistrationView,
     UserProfileView,
     ChangePasswordView,
@@ -13,7 +13,7 @@ app_name = 'customauth'
 
 urlpatterns = [
     # JWT Token endpoints
-    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/', CustomLoginView.as_view(), name='login'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     
     # User endpoints

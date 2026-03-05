@@ -1,21 +1,22 @@
 from rest_framework import status
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-
-from utils.authentication import RequireAPIKey
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
-    CustomTokenObtainPairSerializer,
+    CustomLoginSerializer,
     ChangePasswordSerializer,
     CustomTokenRefreshSerializer
 )
 from drf_spectacular.utils import extend_schema
 from utils import serializers as helpers
+from utils.authentication import RequireAPIKey
+
 User = get_user_model()
 
 
@@ -53,15 +54,19 @@ class CustomTokenRefreshView(TokenRefreshView):
         return response
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    """Custom JWT token obtain view."""
+class CustomLoginView(TokenObtainPairView):
+    """Custom Login view Using Email and Password"""
     permission_classes = [RequireAPIKey]
-    serializer_class = CustomTokenObtainPairSerializer
+    serializer_class = CustomLoginSerializer
+    throttle_classes = [AnonRateThrottle]
+    throttle_scope = 'login_attempts'
+
     @extend_schema(
-        operation_id="login",
-        summary="Login",
+        operation_id="email_password_login",
+        summary="Email & Password Login",
+        request=CustomLoginSerializer,
         responses={
-            200: helpers.SuccessResponseSerializer,
+            200: helpers.LoginResponseSerializer,
             400: helpers.ValidationErrorSerializer,
             401: helpers.UnauthorizedErrorSerializer,
             403: helpers.ForbiddenErrorSerializer,
@@ -99,7 +104,7 @@ class UserRegistrationView(APIView):
         operation_id="register_user",
         summary="Register User",
         responses={
-            201: helpers.CreatedResponseSerializer,
+            201: helpers.RegistrationResponseSerializer,
             400: helpers.ValidationErrorSerializer,
             401: helpers.UnauthorizedErrorSerializer,
             403: helpers.ForbiddenErrorSerializer,

@@ -1,26 +1,35 @@
 from rest_framework import serializers
 
+class LoginResponseSerializer(serializers.Serializer):
+    """
+    Standard 200 OK response serializer for login endpoint.
+
+    Used to return user access and refresh tokens upon successful login.
+    """
+    user = serializers.JSONBoundField()
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+
+class RegistrationResponseSerializer(serializers.Serializer):
+    """
+    Standard 201 Created response serializer for registration endpoint.
+
+    Used to return newly created user access and refresh tokens upon successful registration.
+    """
+    user = serializers.JSONBoundField()
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+
+
 class SuccessResponseSerializer(serializers.Serializer):
     """
-    Standard 202 Created response serializer.
+    Standard 200 OK response serializer.
 
     Used for successful resource creation responses.
     """
     status = serializers.CharField(default="success")
-    data = serializers.JSONField(
-        allow_null=True,
-        default=None
-    )
-
-
-class TipResponseSerializer(serializers.Serializer):
-    """
-    Standard 201 Created response serializer.
-
-    Used for successful resource creation responses.
-    """
-    status = serializers.CharField(default="accepted")
-    data = serializers.JSONField(
+    data = serializers.DictField(
+        child=serializers.CharField(),
         allow_null=True,
         default=None
     )
@@ -33,7 +42,8 @@ class CreatedResponseSerializer(serializers.Serializer):
     Used for successful resource creation responses.
     """
     status = serializers.CharField(default="success")
-    data = serializers.JSONField(
+    data = serializers.DictField(
+        child=serializers.CharField(),
         allow_null=True,
         default=None
     )

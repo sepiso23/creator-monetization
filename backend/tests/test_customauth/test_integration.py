@@ -47,7 +47,7 @@ class TestAuthenticationFlow:
         # Step 1: Login and get tokens
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
-        login_url = reverse('customauth:token_obtain_pair')
+        login_url = reverse('customauth:login')
         login_data = {'email': user.email, 'password': 'TestPass123!'}
         login_response = api_client.post(login_url, login_data, format='json')
         
@@ -106,7 +106,7 @@ class TestAuthenticationFlow:
         assert password_response.status_code == status.HTTP_200_OK
         
         # Verify can login with new password
-        login_url = reverse('customauth:token_obtain_pair')
+        login_url = reverse('customauth:login')
         login_data = {'email': user.email, 'password': 'NewPass456!'}
         login_response = api_client.post(login_url, login_data, format='json')
         
@@ -144,7 +144,7 @@ class TestMultiFrontendScenario:
         user = UserFactory(password='TestPass123!')
         
         # Login and get tokens
-        login_url = reverse('customauth:token_obtain_pair')
+        login_url = reverse('customauth:login')
         login_data = {'email': user.email, 'password': 'TestPass123!'}
         
         # Both clients can login with same credentials
@@ -223,7 +223,7 @@ class TestErrorHandling:
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
         
-        login_url = reverse('customauth:token_obtain_pair')
+        login_url = reverse('customauth:login')
         login_data = {'email': user.email, 'password': 'WrongPassword'}
         response = api_client.post(login_url, login_data, format='json')
         

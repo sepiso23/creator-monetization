@@ -2,7 +2,7 @@ from pathlib import Path
 import environ
 import os
 from datetime import timedelta
-from corsheaders.defaults import default_headers
+from corsheaders.defaults import default_headers, default_methods
 
 env = environ.Env(
     # set casting, default value
@@ -23,22 +23,6 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
-
-# CORS Configuration for multi-frontend support
-
-CORS_ALLOW_ALL_ORIGINS = True # for development only
-# CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = (
-    *default_headers,
-    "x-api-key",  # Allow the custom header
-)
-# CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS', default='http://localhost:5173').split(',')
-
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.sites',
@@ -88,6 +72,27 @@ MIDDLEWARE = [
     'utils.authentication.ClientIdentificationMiddleware',
     'allauth.account.middleware.AccountMiddleware', # Middleware for django-allauth
 ]
+
+# -----------------------
+# CORS Config
+# -----------------------
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    *default_methods,
+]
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-api-key",  # custom header
+    "accept-encoding"
+    "dnt",
+    "origin",
+)
+CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS', default='http://localhost:5173').split(',')
+
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -233,10 +238,13 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'apps.customauth.throttling.PremiumUserThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
+        'anon': '100/day',
+        'user': '1000/day',
+        'premium': '5000/day',
+        'login_attempts': '5/hour',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES':(
@@ -247,6 +255,24 @@ REST_FRAMEWORK = {
         'djangorestframework_camel_case.parser.CamelCaseJSONParser',
     ),
 }
+
+# -------------------
+# Security Headers
+# -------------------
+SECURE_HST_SECONDS = 31536000  # 1 year
+SECURE_HST_INCLUDE_SUBDOMAINS = True
+SECURE_HST_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_REFERRER_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_RESOURCE_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_EMBEDDER_POLICY = 'require-corp'
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+X_FRAME_OPTIONS = 'DENY'
+
 
 # Simple JWT Configuration
 SIMPLE_JWT = {

@@ -131,7 +131,7 @@ class UpdateProfileView(APIView):
 
 class CreatorPublicView(APIView):
     """API view to retrieve public creator profile data."""
-    permission_classes = [AllowAny]
+    permission_classes = [RequireAPIKey, AllowAny]
     serializer_class = CreatorPublicSerializer
 
     @extend_schema(
@@ -180,7 +180,7 @@ class CreatorPublicView(APIView):
 
 
 class CreatorsListView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [RequireAPIKey, AllowAny]
     serializer_class = CreatorListSerializer
 
     @extend_schema(

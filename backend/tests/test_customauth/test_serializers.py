@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from apps.customauth.serializers import (
     UserSerializer,
     UserRegistrationSerializer,
-    CustomTokenObtainPairSerializer,
+    CustomLoginSerializer,
     ChangePasswordSerializer,
 )
 from tests.factories import UserFactory
@@ -150,14 +150,14 @@ class TestUserRegistrationSerializer:
         assert user.user_type == 'creator'
     
 @pytest.mark.django_db
-class TestCustomTokenObtainPairSerializer:
-    """Test CustomTokenObtainPairSerializer."""
+class TestCustomLoginSerializer:
+    """Test CustomLoginSerializer."""
 
     def test_token_claims_include_user_data(self):
         """Test token includes custom user claims."""
         user = UserFactory(email='test@example.com', username='testuser', user_type='creator')
         
-        serializer = CustomTokenObtainPairSerializer()
+        serializer = CustomLoginSerializer()
         token = serializer.get_token(user)
         
         assert token['email'] == 'test@example.com'
@@ -168,7 +168,7 @@ class TestCustomTokenObtainPairSerializer:
         """Test token includes is_staff for admin users."""
         user = UserFactory(user_type='admin', is_staff=True)
         
-        serializer = CustomTokenObtainPairSerializer()
+        serializer = CustomLoginSerializer()
         token = serializer.get_token(user)
         
         assert token['is_staff'] is True
@@ -178,7 +178,7 @@ class TestCustomTokenObtainPairSerializer:
         """Test token includes full name."""
         user = UserFactory(first_name='John', last_name='Doe')
         
-        serializer = CustomTokenObtainPairSerializer()
+        serializer = CustomLoginSerializer()
         token = serializer.get_token(user)
         
         assert token['full_name'] == 'John Doe'

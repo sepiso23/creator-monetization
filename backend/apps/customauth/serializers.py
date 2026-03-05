@@ -52,7 +52,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+class CustomLoginSerializer(TokenObtainPairSerializer):
     """Custom JWT token serializer with user data."""
 
     @classmethod

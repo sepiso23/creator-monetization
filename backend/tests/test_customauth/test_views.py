@@ -10,6 +10,51 @@ from tests.factories import UserFactory, StaffUserFactory, APIClientFactory
 
 User = get_user_model()
 
+@pytest.mark.django_db
+class TestLoginRateLimiting:
+    """Test login rate limiting."""
+
+    def test_login_rate_limit_exceeded(self, api_client):
+        """Test login fails after exceeding rate limit."""
+        email = 'test@example.com'
+        UserFactory(email=email, password='TestPass123!')
+
+        # Attempt login multiple times to exceed rate limit
+        login_url = reverse('customauth:login')
+        client = APIClientFactory()
+        api_client.credentials(HTTP_X_API_KEY=client.api_key)
+        for _ in range(6):  # Exceed the rate limit
+            login_data = {'email': email, 'password': 'WrongPass123!'}
+            api_client.post(login_url, login_data, format='json')
+
+        # Verify login fails after exceeding rate limit
+        login_data = {'email': email, 'password': 'TestPass123!'}
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_login_rate_limit_resets_after_timeout(self, api_client):
+        """Test login rate limit resets after timeout."""
+        email = 'test@example.com'
+        UserFactory(email=email, password='TestPass123!')
+
+        # Attempt login multiple times to exceed rate limit
+        login_url = reverse('customauth:login')
+        client = APIClientFactory()
+        api_client.credentials(HTTP_X_API_KEY=client.api_key)
+        for _ in range(6):  # Exceed the rate limit
+            login_data = {'email': email, 'password': 'WrongPass123!'}
+            api_client.post(login_url, login_data, format='json')
+
+        # Verify login fails after exceeding rate limit
+        login_data = {'email': email, 'password': 'TestPass123!'}
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        # Simulate waiting for timeout (30 minutes)
+        from django.core.cache import cache
+        cache.clear()  # Clear cache to reset rate limit
+        # Verify login succeeds after timeout        
+        response = api_client.post(login_url, login_data, format='json')
+        assert response.status_code == status.HTTP_200_OK
 
 @pytest.mark.django_db
 class TestUserRegistrationView:
@@ -113,7 +158,7 @@ class TestTokenObtainView:
         UserFactory(email='test@example.com', password='TestPass123!')
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
-        url = reverse('customauth:token_obtain_pair')
+        url = reverse('customauth:login')
 
         data = {
             'email': 'test@example.com',
@@ -127,7 +172,7 @@ class TestTokenObtainView:
 
     def test_login_invalid_email(self, api_client):
         """Test login fails with invalid email."""
-        url = reverse('customauth:token_obtain_pair')
+        url = reverse('customauth:login')
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
 
@@ -142,7 +187,7 @@ class TestTokenObtainView:
     def test_login_invalid_password(self, api_client):
         """Test login fails with invalid password."""
         UserFactory(email='test@example.com', password='TestPass123!')
-        url = reverse('customauth:token_obtain_pair')
+        url = reverse('customauth:login')
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
 
@@ -163,7 +208,7 @@ class TestTokenObtainView:
             password='TestPass123!',
             user_type='creator'
         )
-        url = reverse('customauth:token_obtain_pair')
+        url = reverse('customauth:login')
 
         data = {
             'email': 'test@example.com',
@@ -181,7 +226,7 @@ class TestTokenObtainView:
     def test_login_staff_user(self, api_client):
         """Test staff user can login."""
         StaffUserFactory(email='staff@example.com', password='TestPass123!')
-        url = reverse('customauth:token_obtain_pair')
+        url = reverse('customauth:login')
         client = APIClientFactory()
         api_client.credentials(HTTP_X_API_KEY=client.api_key)
 
