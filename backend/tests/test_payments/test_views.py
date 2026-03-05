@@ -5,7 +5,29 @@ from apps.wallets.models import WalletTransaction
 
 
 @pytest.mark.django_db
-class TestCashinViews:
+class TestDepositViews:
+
+    def test_deposit_rate_limit_exceeded(self, auth_api_client, wallet_factory, mocker):
+        """Test that deposit endpoint is rate limited."""
+        mock_request = mocker.patch("apps.payments.views.pawapay_request")
+        mock_request.return_value = (
+            {"depositId": "1234", "status": "ACCEPTED"}, 200)
+
+        data = {
+            "patronPhone": "7655555556",
+            "provider": "MTN_MOMO_ZMB",
+            "amount": "10",
+            "patronmessage": 'test message'
+        }
+        for i in range(10):
+            response = auth_api_client.post(
+                f"/api/v1/payments/deposits/{wallet_factory.id}/", data, format='json')
+            assert response.status_code in [201, 500]  # Accept both success and gateway error
+
+        # 11th request should be rate limited
+        response = auth_api_client.post(
+            f"/api/v1/payments/deposits/{wallet_factory.id}/", data, format='json')
+        assert response.status_code == 429
 
     def test_unautenticated_frontend_client_fails(self, api_client, wallet_factory, mocker):
         mock_request = mocker.patch("apps.payments.views.pawapay_request")

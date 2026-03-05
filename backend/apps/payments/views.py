@@ -15,9 +15,10 @@ from utils import serializers as helpers
 User = get_user_model()
 
 
-class DepositAPIView(APIView):
+class PaymentAPIView(APIView):
     permission_classes = [AllowAny, RequireAPIKey]
     serializer_class = PaymentSerializer
+    throttle_scope = 'payments'
 
     @extend_schema(
         operation_id="send_tip",
