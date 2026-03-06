@@ -15,39 +15,47 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         data = super().validate(attrs)
         return data
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer for user model."""
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'is_active', 'date_joined', 'slug')
-        read_only_fields = ('id', 'user_type', 'date_joined', 'is_active', 'slug')
+        fields = (
+            "id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "user_type",
+            "is_active",
+            "date_joined",
+            "slug",
+        )
+        read_only_fields = ("id", "user_type", "date_joined", "is_active", "slug")
 
 
 class CustomUserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
 
     password = serializers.CharField(
-        write_only=True,
-        required=True,
-        validators=[validate_password]
+        write_only=True, required=True, validators=[validate_password]
     )
- 
+
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'first_name', 'last_name')
-
+        fields = ("email", "username", "password", "first_name", "last_name")
 
     def create(self, validated_data):
         """Create user as creator with hashed password."""
         # Creators self-register, so force user_type to 'creator'
         user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            user_type='creator'
+            email=validated_data["email"],
+            username=validated_data["username"],
+            password=validated_data["password"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            user_type="creator",
         )
         return user
 
@@ -60,11 +68,11 @@ class CustomLoginSerializer(TokenObtainPairSerializer):
         """Override to add custom claims."""
         token = super().get_token(user)
         # Add custom claims
-        token['email'] = user.email
-        token['username'] = user.username
-        token['user_type'] = user.user_type
-        token['full_name'] = user.get_full_name()
-        token['is_staff'] = user.is_staff
+        token["email"] = user.email
+        token["username"] = user.username
+        token["user_type"] = user.user_type
+        token["full_name"] = user.get_full_name()
+        token["is_staff"] = user.is_staff
         return token
 
     def validate(self, attrs):
@@ -83,26 +91,20 @@ class TokenRefreshSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.Serializer):
     """Serializer for password change."""
 
-    old_password = serializers.CharField(
-        write_only=True,
-        required=True
-    )
+    old_password = serializers.CharField(write_only=True, required=True)
     new_password = serializers.CharField(
-        write_only=True,
-        required=True,
-        validators=[validate_password]
+        write_only=True, required=True, validators=[validate_password]
     )
-
 
     def validate_old_password(self, value):
         """Validate old password."""
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError('Old password is incorrect.')
+            raise serializers.ValidationError("Old password is incorrect.")
         return value
 
     def update(self, instance, validated_data):
         """Update user password."""
-        instance.set_password(validated_data['new_password'])
+        instance.set_password(validated_data["new_password"])
         instance.save()
         return instance

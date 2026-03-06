@@ -8,10 +8,15 @@ app_name = "payouts"
 
 urlpatterns = [
     path(
-        "<uuid:wallet_id>/initiate/", trigger_wallet_payout, name="trigger_wallet_payout",
+        "<uuid:wallet_id>/initiate/",
+        trigger_wallet_payout,
+        name="trigger_wallet_payout",
     ),
-    path("<uuid:payout_tx_id>/finalise/", finalise_wallet_payout, name="finalise_wallet_payout",
-         ),
+    path(
+        "<uuid:payout_tx_id>/finalise/",
+        finalise_wallet_payout,
+        name="finalise_wallet_payout",
+    ),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

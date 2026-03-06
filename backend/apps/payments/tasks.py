@@ -25,7 +25,13 @@ def resend_deposit_callback(self, payment_id):
 @shared_task
 def resend_pending_deposits():
     pending = Payment.objects.filter(
-        status__in=["pending", "accepted", "submitted", "processing", "in_reconciliation"]
+        status__in=[
+            "pending",
+            "accepted",
+            "submitted",
+            "processing",
+            "in_reconciliation",
+        ]
     )
 
     for payment in pending:

@@ -8,7 +8,7 @@ from apps.payments.models import (
     Currency,
     UUIDModel,
     TimeStampedModel,
-    )
+)
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -21,7 +21,8 @@ class Wallet(UUIDModel):
         (30, "Monthly"),
     )
     creator = models.OneToOneField(
-        CreatorProfile, on_delete=models.CASCADE, related_name="wallet")
+        CreatorProfile, on_delete=models.CASCADE, related_name="wallet"
+    )
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default="ZMW")
     payout_interval_days = models.PositiveIntegerField(
@@ -62,7 +63,7 @@ class WalletPayoutAccount(models.Model):
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
 
 class WalletTransaction(UUIDModel):
 
@@ -85,11 +86,9 @@ class WalletTransaction(UUIDModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
-    transaction_type = models.CharField(
-        max_length=20, choices=TRANSACTION_TYPE)
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE)
 
     status = models.CharField(max_length=20, choices=STATUS, default="PENDING")
-
 
     # Link to Payment or Payout
     payment = models.ForeignKey(
@@ -133,15 +132,12 @@ class WalletKYC(models.Model):
         ("BANK", "BANK"),
         ("MOBILE_MONEY", "MOBILE_MONEY"),
     )
-    wallet = models.OneToOneField(
-        Wallet, on_delete=models.CASCADE, related_name="kyc")
-    id_document_type = models.CharField(
-        max_length=20, choices=ID_DOCUMENT_TYPE)
+    wallet = models.OneToOneField(Wallet, on_delete=models.CASCADE, related_name="kyc")
+    id_document_type = models.CharField(max_length=20, choices=ID_DOCUMENT_TYPE)
     id_document_number = models.CharField(max_length=50)
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    id_document_copy = models.FileField(
-        upload_to="kyc_ids/", blank=True, null=True)
+    id_document_copy = models.FileField(upload_to="kyc_ids/", blank=True, null=True)
     pacra_certificate_copy = models.FileField(
         upload_to="kyc_certificates/", blank=True, null=True
     )
@@ -288,4 +284,3 @@ class Dispute(UUIDModel, TimeStampedModel):
             models.Index(fields=["payment", "status"]),
             models.Index(fields=["external_id", "provider"]),
         ]
-

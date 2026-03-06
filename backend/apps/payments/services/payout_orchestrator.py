@@ -8,6 +8,7 @@ from apps.wallets.services.wallet_services import WalletService
 from utils.exceptions import InsufficientBalance, InvalidTransaction, PayoutNotFound
 from apps.wallets.models import WalletTransaction
 
+
 class PayoutOrchestrator:
     """Orchestrates the payout process for wallets."""
 
@@ -45,7 +46,7 @@ class PayoutOrchestrator:
             raise InvalidTransaction("A payout is already pending for this wallet")
 
         correlation_id = f"PAYOUT-{uuid.uuid4()}"
-        
+
         payout_tx = WalletTransactionService.payout(
             wallet=wallet,
             amount=wallet.balance - FeeService.payout_fee(),  # Deduct fee

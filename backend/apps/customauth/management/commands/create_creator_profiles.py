@@ -8,21 +8,24 @@ from apps.creators.models import CreatorProfile
 
 User = get_user_model()
 
+
 class Command(BaseCommand):
     help = 'Create CreatorProfile for existing users with user_type "creator"'
 
     def handle(self, *args, **options):
-        creators = User.objects.filter(user_type='creator')
+        creators = User.objects.filter(user_type="creator")
         created_count = 0
 
         for user in creators:
-            if not hasattr(user, 'creator_profile'):
+            if not hasattr(user, "creator_profile"):
                 CreatorProfile.objects.create(user=user)
                 created_count += 1
                 self.stdout.write(
-                    self.style.SUCCESS(f'Created CreatorProfile for user: {user.username}')
+                    self.style.SUCCESS(
+                        f"Created CreatorProfile for user: {user.username}"
+                    )
                 )
 
         self.stdout.write(
-            self.style.SUCCESS(f'Total CreatorProfiles created: {created_count}')
+            self.style.SUCCESS(f"Total CreatorProfiles created: {created_count}")
         )

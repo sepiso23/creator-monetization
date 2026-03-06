@@ -4,8 +4,7 @@ from django.utils import timezone
 
 class CreatorUsage(models.Model):
     school = models.OneToOneField(
-        "apps.creators.CreatorProfile",
-        on_delete=models.CASCADE, related_name="usage"
+        "apps.creators.CreatorProfile", on_delete=models.CASCADE, related_name="usage"
     )
 
     # Core counters

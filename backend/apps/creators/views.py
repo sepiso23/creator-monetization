@@ -4,8 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.creators.models import CreatorProfile
 from apps.creators.serializers import (
-    CreatorPublicSerializer, CreatorListSerializer,
-    UpdateCreatorProfileSerializer, UserTypeSelectionSerializer
+    CreatorPublicSerializer,
+    CreatorListSerializer,
+    UpdateCreatorProfileSerializer,
+    UserTypeSelectionSerializer,
 )
 from drf_spectacular.utils import extend_schema
 from utils import serializers as helpers
@@ -33,24 +35,25 @@ class SelectUserTypeView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def post(self, request):
         """Endpoint for users to select their user type (creator or patron)."""
 
         serializer = UserTypeSelectionSerializer(data=request.data)
         if serializer.is_valid():
-            user_type = serializer.validated_data['user_type']
+            user_type = serializer.validated_data["user_type"]
             request.user.user_type = user_type
             request.user.save()
             return Response(
                 {"status": "success", "message": f"User type set to {user_type}."},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
         return Response(
             {"error": "Invalid data", "details": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
+
 
 class UpdateProfileView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
@@ -69,7 +72,7 @@ class UpdateProfileView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request):
         """
@@ -81,18 +84,18 @@ class UpdateProfileView(APIView):
         --------------
         Requires authentication (creator).
         """
-        serializer = UpdateCreatorProfileSerializer(
-            request.user.creator_profile)
+        serializer = UpdateCreatorProfileSerializer(request.user.creator_profile)
 
         profile_data = serializer.data
-        profile_data.update({
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-            'phone_number': request.user.phone_number,
-        })
+        profile_data.update(
+            {
+                "first_name": request.user.first_name,
+                "last_name": request.user.last_name,
+                "phone_number": request.user.phone_number,
+            }
+        )
         return Response(
-            {"status": "success", "data": profile_data},
-            status=status.HTTP_200_OK
+            {"status": "success", "data": profile_data}, status=status.HTTP_200_OK
         )
 
     @extend_schema(
@@ -107,30 +110,30 @@ class UpdateProfileView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def put(self, request):
         """Update current user's full profile information."""
 
         serializer = UpdateCreatorProfileSerializer(
             instance=request.user.creator_profile,
-            data=request.data, partial=True,
+            data=request.data,
+            partial=True,
             context={"request": request},
         )
 
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {"status": "success"}, status=status.HTTP_200_OK
-            )
+            return Response({"status": "success"}, status=status.HTTP_200_OK)
         return Response(
             {"error": "Invalid data", "details": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 
 class CreatorPublicView(APIView):
     """API view to retrieve public creator profile data."""
+
     permission_classes = [RequireAPIKey, AllowAny]
     serializer_class = CreatorPublicSerializer
 
@@ -143,7 +146,7 @@ class CreatorPublicView(APIView):
             401: helpers.UnauthorizedErrorSerializer,
             403: helpers.ForbiddenErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request, slug: str) -> Response:
         """
@@ -164,7 +167,8 @@ class CreatorPublicView(APIView):
         """
         try:
             creator_profile = CreatorProfile.objects.get(
-                user__slug__iexact=slug, status="active")
+                user__slug__iexact=slug, status="active"
+            )
         except CreatorProfile.DoesNotExist:
             return Response(
                 {"status": "error", "message": "Creator profile not found."},
@@ -172,7 +176,8 @@ class CreatorPublicView(APIView):
             )
 
         serializer = CreatorPublicSerializer(
-            creator_profile, context={'request': request})
+            creator_profile, context={"request": request}
+        )
         return Response(
             {"status": "success", "data": serializer.data},
             status=status.HTTP_200_OK,
@@ -192,7 +197,7 @@ class CreatorsListView(APIView):
             401: helpers.UnauthorizedErrorSerializer,
             403: helpers.ForbiddenErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request) -> Response:
         """List active public creators for discovery.
@@ -205,10 +210,12 @@ class CreatorsListView(APIView):
         --------------
         Public endpoint (no authentication required).
         """
-        creator_profiles = CreatorProfile.objects.filter(
-            status="active").order_by('-followers_count')
+        creator_profiles = CreatorProfile.objects.filter(status="active").order_by(
+            "-followers_count"
+        )
         serializer = CreatorListSerializer(
-            creator_profiles, many=True, context={'request': request})
+            creator_profiles, many=True, context={"request": request}
+        )
         return Response(
             {"status": "success", "data": serializer.data},
             status=status.HTTP_200_OK,

@@ -15,7 +15,9 @@ from apps.wallets.serializers import (
     WalletUpdateSerializer,
 )
 from apps.wallets.services.wallet_services import (
-    WalletTransactionService, WalletService)
+    WalletTransactionService,
+    WalletService,
+)
 from utils.exceptions import DuplicateTransaction, WalletNotFound
 from utils.authentication import RequireAPIKey
 from utils import serializers as helpers
@@ -38,7 +40,7 @@ class SupporterListView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request):
         """
@@ -54,28 +56,24 @@ class SupporterListView(APIView):
         try:
             wallet = WalletService.get_wallet_for_user(request.user)
         except WalletNotFound:
-            return Response(
-                {"status": "NOT_FOUND"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"status": "NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         # Aggregate total tips by supporter
-        supporters = (
-            WalletTransaction.objects.filter(
-                wallet=wallet, transaction_type="CASH_IN"
-            )
+        supporters = WalletTransaction.objects.filter(
+            wallet=wallet, transaction_type="CASH_IN"
         )
 
         serializer = CreatorSupporterSerializer(supporters, many=True)
-       
+
         return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
         )
+
 
 class WalletPayoutAccountView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletPayoutAccountSerializer
+
     @extend_schema(
         operation_id="retrieve_wallet_payout_account",
         summary="Retrieve Wallet Payout Account",
@@ -88,7 +86,7 @@ class WalletPayoutAccountView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request):
         """
@@ -106,30 +104,29 @@ class WalletPayoutAccountView(APIView):
             payout_account = WalletPayoutAccount.objects.get(wallet=wallet)
         except (WalletNotFound, WalletPayoutAccount.DoesNotExist):
             return Response(
-                {"status":"failed", "error": "User does not have a payout account"},
-                status=status.HTTP_404_NOT_FOUND
+                {"status": "failed", "error": "User does not have a payout account"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = WalletPayoutAccountSerializer(payout_account)
         return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
         )
 
     @extend_schema(
-            operation_id="update_wallet_payout_account",
-            summary="Update Wallet Payout Account",
-            responses={
-                200: helpers.SuccessResponseSerializer,
-                400: helpers.ValidationErrorSerializer,
-                401: helpers.UnauthorizedErrorSerializer,
-                403: helpers.ForbiddenErrorSerializer,
-                404: helpers.NotFoundErrorSerializer,
-                409: helpers.ConflictErrorSerializer,
-                429: helpers.RateLimitErrorSerializer,
-                500: helpers.ServerErrorSerializer,
-            }
-        )
+        operation_id="update_wallet_payout_account",
+        summary="Update Wallet Payout Account",
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        },
+    )
     def put(self, request):
         """
         Update the authenticated creator's wallet payout account details.
@@ -145,8 +142,8 @@ class WalletPayoutAccountView(APIView):
             payout_account = WalletPayoutAccount.objects.get(wallet=wallet)
         except (WalletNotFound, WalletPayoutAccount.DoesNotExist):
             return Response(
-                {"status":"failed","error": "User does not have a payout account"},
-                status=status.HTTP_404_NOT_FOUND
+                {"status": "failed", "error": "User does not have a payout account"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = WalletPayoutAccountSerializer(payout_account, data=request.data)
@@ -154,16 +151,17 @@ class WalletPayoutAccountView(APIView):
             serializer.save()
             return Response(
                 {"status": "success", "data": serializer.data},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
         return Response(
             {"status": "failed", "errors": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 
 class WalletListView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
+
     @extend_schema(
         operation_id="retrieve_Wallet",
         summary="Retrieve Users Wallet",
@@ -177,9 +175,8 @@ class WalletListView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
-
     def get(self, request):
         """
         Retrieve the authenticated creator's wallet summary.
@@ -194,10 +191,7 @@ class WalletListView(APIView):
         try:
             wallet = WalletService.get_wallet_for_user(request.user)
         except WalletNotFound:
-            return Response(
-                {"status": "NOT_FOUND"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"status": "NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         # Fetch recent CASH_IN transactions
         transactions = WalletTransaction.objects.filter(
@@ -212,10 +206,12 @@ class WalletListView(APIView):
             wallet=wallet, status="COMPLETED"
         ).aggregate(
             cash_in=Sum("amount", filter=Q(amount__gt=0)),
-            cash_out=Sum("amount",
-                        filter=Q(amount__lt=0) & Q(transaction_type="PAYOUT")),
-            cash_in_costs=Sum("amount",
-                            filter=Q(amount__lt=0) & Q(transaction_type="FEE")),
+            cash_out=Sum(
+                "amount", filter=Q(amount__lt=0) & Q(transaction_type="PAYOUT")
+            ),
+            cash_in_costs=Sum(
+                "amount", filter=Q(amount__lt=0) & Q(transaction_type="FEE")
+            ),
         )
 
         # Serialize wallet details
@@ -223,18 +219,19 @@ class WalletListView(APIView):
         wallet_data = serializer.data
 
         # Add transaction summaries and recent transactions
-        wallet_data.update({
-            "cash_in": totals["cash_in"] or 0,
-            "cash_out": abs(totals["cash_out"] or 0),
-            "cash_in_costs": abs(totals["cash_in_costs"] or 0),
-            "recent_transactions": WalletTransactionListSerializer(
-                transactions, many=True
-            ).data,
-        })
+        wallet_data.update(
+            {
+                "cash_in": totals["cash_in"] or 0,
+                "cash_out": abs(totals["cash_out"] or 0),
+                "cash_in_costs": abs(totals["cash_in_costs"] or 0),
+                "recent_transactions": WalletTransactionListSerializer(
+                    transactions, many=True
+                ).data,
+            }
+        )
 
         return Response(
-            {"status": "success", "data": wallet_data},
-            status=status.HTTP_200_OK
+            {"status": "success", "data": wallet_data}, status=status.HTTP_200_OK
         )
 
     def _update_payment_statuses(self, wallet):
@@ -255,9 +252,7 @@ class WalletListView(APIView):
             payment_status = payment.status
 
             if payment_status.lower() != "completed":
-                data, code = pawapay_request(
-                    "GET", f"/v2/deposits/{payment.id}"
-                )
+                data, code = pawapay_request("GET", f"/v2/deposits/{payment.id}")
                 if code == 200 and "data" in data:
                     payment_status = data["data"]["status"].lower()
 
@@ -276,21 +271,22 @@ class WalletListView(APIView):
                             )
                         except DuplicateTransaction:
                             pass
+
     @extend_schema(
-            operation_id="update_payout_interval",
-            summary="Update Payout Interval",
-            request=WalletUpdateSerializer,
-            responses={
-                200: helpers.SuccessResponseSerializer,
-                400: helpers.ValidationErrorSerializer,
-                401: helpers.UnauthorizedErrorSerializer,
-                403: helpers.ForbiddenErrorSerializer,
-                404: helpers.NotFoundErrorSerializer,
-                409: helpers.ConflictErrorSerializer,
-                429: helpers.RateLimitErrorSerializer,
-                500: helpers.ServerErrorSerializer,
-            }
-         )
+        operation_id="update_payout_interval",
+        summary="Update Payout Interval",
+        request=WalletUpdateSerializer,
+        responses={
+            200: helpers.SuccessResponseSerializer,
+            400: helpers.ValidationErrorSerializer,
+            401: helpers.UnauthorizedErrorSerializer,
+            403: helpers.ForbiddenErrorSerializer,
+            404: helpers.NotFoundErrorSerializer,
+            409: helpers.ConflictErrorSerializer,
+            429: helpers.RateLimitErrorSerializer,
+            500: helpers.ServerErrorSerializer,
+        },
+    )
     def put(self, request, *args, **kwargs):
         """
         Update an authenticated users payout interval
@@ -299,10 +295,7 @@ class WalletListView(APIView):
         try:
             wallet = WalletService.get_wallet_for_user(request.user)
         except WalletNotFound:
-            return Response(
-                {"status": "NOT_FOUND"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"status": "NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = WalletUpdateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -311,7 +304,7 @@ class WalletListView(APIView):
                     "status": "failed",
                     "errors": serializer.errors,
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         wallet.payout_interval_days = serializer.validated_data["payout_interval_days"]
@@ -322,14 +315,16 @@ class WalletListView(APIView):
                 "status": "success",
                 "data": {
                     "payout_interval_days": wallet.payout_interval_days,
-                }
+                },
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
+
 
 class WalletTransactionsView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletTransactionListSerializer
+
     @extend_schema(
         operation_id="list_wallet_transactions",
         summary="Retrieve Wallet Transactions",
@@ -342,7 +337,7 @@ class WalletTransactionsView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request):
         """
@@ -358,10 +353,7 @@ class WalletTransactionsView(APIView):
         try:
             wallet = WalletService.get_wallet_for_user(request.user)
         except WalletNotFound:
-            return Response(
-                {"status": "NOT_FOUND"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"status": "NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         # Build filter queryset
         queryset = WalletTransaction.objects.filter(wallet=wallet)
@@ -386,13 +378,14 @@ class WalletTransactionsView(APIView):
                 "count": queryset.count(),
                 "data": serializer.data,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
 class WalletKYCView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletKYCSerializer
+
     @extend_schema(
         operation_id="retrieve_wallet_details",
         summary="Retrieve Wallet KYC",
@@ -405,7 +398,7 @@ class WalletKYCView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def get(self, request):
         """
@@ -424,15 +417,14 @@ class WalletKYCView(APIView):
         except (WalletNotFound, WalletKYC.DoesNotExist):
             return Response(
                 {"error": "User does not have wallet KYC information"},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = WalletKYCSerializer(wallet_kyc)
         return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
         )
-    
+
     @extend_schema(
         operation_id="update_wallet_kyc",
         summary="Update Wallet KYC",
@@ -445,7 +437,7 @@ class WalletKYCView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def put(self, request):
         """Update current user's wallet KYC information."""
@@ -455,19 +447,17 @@ class WalletKYCView(APIView):
         except (WalletNotFound, WalletKYC.DoesNotExist):
             return Response(
                 {"error": "User does not have wallet KYC information"},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = WalletKYCSerializer(
-            wallet_kyc, data=request.data, partial=True
-        )
+        serializer = WalletKYCSerializer(wallet_kyc, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(
                 {"status": "success", "data": serializer.data},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
         return Response(
             {"error": "Invalid data", "details": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )

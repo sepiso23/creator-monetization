@@ -18,7 +18,7 @@ User = get_user_model()
 class PaymentAPIView(APIView):
     permission_classes = [AllowAny, RequireAPIKey]
     serializer_class = PaymentSerializer
-    throttle_scope = 'payments'
+    throttle_scope = "payments"
 
     @extend_schema(
         operation_id="send_tip",
@@ -32,7 +32,7 @@ class PaymentAPIView(APIView):
             409: helpers.ConflictErrorSerializer,
             429: helpers.RateLimitErrorSerializer,
             500: helpers.ServerErrorSerializer,
-        }
+        },
     )
     def post(self, request, wallet_id):
         """
@@ -50,6 +50,7 @@ class PaymentAPIView(APIView):
         serializer = PaymentSerializer(data=request.data)
         if serializer.is_valid():
             from utils.validators import PhoneValidator as PV
+
             phone = serializer.validated_data.get("patron_phone")
             is_valid, msg = PV.validate_phone_number(phone)
             if not is_valid:
@@ -58,10 +59,10 @@ class PaymentAPIView(APIView):
                         "status": "failed",
                         "error": "validation_error",
                     },
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             wallet = get_object_or_404(Wallet, id=wallet_id)
-            
+
             with transaction.atomic():
                 payment = serializer.save(wallet=wallet)
 
@@ -73,21 +74,17 @@ class PaymentAPIView(APIView):
                     "type": "MMO",
                     "accountDetails": {
                         "provider": str(payment.provider),
-                        "phoneNumber": '26' + str(payment.patron_phone),
+                        "phoneNumber": "26" + str(payment.patron_phone),
                     },
                 },
                 "customerMessage": "Tipping at TipZed",
                 "clientReferenceId": payment.reference,
                 "metadata": [
-                    {
-                        "paymentId": str(payment.id),
-                        "walletId": str(wallet.id)
-                    }
+                    {"paymentId": str(payment.id), "walletId": str(wallet.id)}
                 ],
             }
 
-            data, code = pawapay_request(
-                "POST", "/v2/deposits/", payload=payload)
+            data, code = pawapay_request("POST", "/v2/deposits/", payload=payload)
             if code == 200:
                 status_lower = data.get("status", "").lower()
                 payment.status = status_lower
@@ -95,17 +92,15 @@ class PaymentAPIView(APIView):
                 payment.save()
                 serializer = PaymentSerializer(payment)
                 return Response(
-                    {"status": "accepted",
-                     "data": serializer.data
-                     },
-                    status=status.HTTP_201_CREATED
+                    {"status": "accepted", "data": serializer.data},
+                    status=status.HTTP_201_CREATED,
                 )
-            return Response({"status": data['status']}, status=code)
+            return Response({"status": data["status"]}, status=code)
 
         return Response(
             {
                 "status": "failed",
                 "error": "validation_error",
             },
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )

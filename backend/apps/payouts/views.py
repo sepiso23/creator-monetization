@@ -10,8 +10,7 @@ from apps.payments.services.payout_orchestrator import PayoutOrchestrator
 
 
 def superuser_required(view_func):
-    return user_passes_test(
-        lambda u: u.is_active and u.is_superuser)(view_func)
+    return user_passes_test(lambda u: u.is_active and u.is_superuser)(view_func)
 
 
 @staff_member_required
@@ -68,8 +67,7 @@ def finalise_wallet_payout(request, payout_tx_id):
 
         messages.success(
             request,
-            f"Payout finalised successfully "
-            f"(Reference: {payout_tx.reference})",
+            f"Payout finalised successfully " f"(Reference: {payout_tx.reference})",
         )
 
     except Exception as exc:
@@ -89,7 +87,6 @@ def trigger_wallet_payout(request, wallet_id):
 
     wallet = get_object_or_404(Wallet, id=wallet_id)
     payout_account = wallet.payout_account
-    
 
     app_label = Wallet._meta.app_label
     model_name = Wallet._meta.model_name
@@ -125,8 +122,7 @@ def trigger_wallet_payout(request, wallet_id):
 
         messages.success(
             request,
-            f"Payout initiated successfully"
-            f"(Reference: {payout_tx.reference})",
+            f"Payout initiated successfully" f"(Reference: {payout_tx.reference})",
         )
 
     except Exception as exc:

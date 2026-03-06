@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from apps.creators.models import CreatorProfile
 from apps.wallets.models import Wallet, WalletKYC
 
+
 @receiver(post_save, sender=CreatorProfile)
 def create_wallet_for_creator(sender, instance, created, **kwargs):
     """Create a Wallet when a CreatorProfile is created."""
@@ -23,4 +24,5 @@ def create_wallet_payout_account_for_wallet(sender, instance, created, **kwargs)
     """Create a WalletPayoutAccount when a Wallet is created."""
     if created:
         from apps.wallets.models import WalletPayoutAccount
+
         WalletPayoutAccount.objects.get_or_create(wallet=instance)

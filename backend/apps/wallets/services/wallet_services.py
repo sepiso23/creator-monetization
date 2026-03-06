@@ -1,10 +1,10 @@
-
 """
 Service layer for wallet operations, including cash-ins, payouts, and
 fee management. This module defines the core business logic for handling
 wallet transactions, ensuring data integrity, and maintaining accurate
 wallet balances.
 """
+
 import uuid
 from decimal import Decimal
 from django.db import transaction
@@ -19,7 +19,6 @@ from utils.exceptions import (
     DuplicateTransaction,
     InvalidTransaction,
 )
-
 
 
 class PayoutScheduleService:
@@ -80,11 +79,14 @@ class WalletService:
         """
         try:
             query_filter = (
-                (Q(transaction_type="CASH_IN") | Q(transaction_type="PAYOUT")) &
-                Q(status="COMPLETED")
+                Q(transaction_type="CASH_IN") | Q(transaction_type="PAYOUT")
+            ) & Q(status="COMPLETED")
+            total = (
+                wallet.transactions.filter(query_filter).aggregate(total=Sum("amount"))[
+                    "total"
+                ]
+                or 0
             )
-            total = (wallet.transactions.filter(query_filter).aggregate(
-                total=Sum("amount"))["total"] or 0)
         except AttributeError:
             raise WalletError("Wallet error")
 
@@ -98,6 +100,7 @@ class WalletTransactionService:
     """
     Single source of truth for all wallet money movements.
     """
+
     @staticmethod
     def create_fee_transaction(
         *,
@@ -128,7 +131,7 @@ class WalletTransactionService:
 
         if WalletTransaction.objects.filter(reference=reference).exists():
             raise DuplicateTransaction("Transaction already exists")
-            
+
         fee_tx = WalletTransaction.objects.create(
             wallet=wallet,
             amount=final_amount,
@@ -162,7 +165,7 @@ class WalletTransactionService:
 
         fee = FeeService.calculate_cash_in_fee(amount)
         net_amount = amount - fee
-        
+
         correlation_id = f"CASHIN-{uuid.uuid4()}"
 
         cashin_tx = WalletTransaction.objects.create(
@@ -202,7 +205,7 @@ class WalletTransactionService:
         of the payout (marking as COMPLETED or FAILED) should be done via
         finalize_payout() to ensure proper fee handling and balance updates.
         """
-        
+
         if amount <= 0:
             raise InvalidTransaction("Amount must be positive")
 
@@ -266,7 +269,7 @@ class WalletTransactionService:
             payout_tx.save(update_fields=["status", "approved_by"])
             WalletService.recalculate_wallet_balance(payout_tx.wallet)
             return payout_tx
-        
+
         # FAILED PAYOUT → reverse fee
         payout_tx.status = "FAILED"
         payout_tx.save(update_fields=["status", "approved_by"])

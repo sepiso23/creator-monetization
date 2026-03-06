@@ -1,6 +1,7 @@
 """
 Serializers for payment-related models (Wallet, WalletTransaction, KYC, etc.)
 """
+
 from rest_framework import serializers
 from decimal import Decimal
 from django.db import models
@@ -9,8 +10,11 @@ from .models import Wallet, WalletPayoutAccount, WalletTransaction, WalletKYC
 
 class CreatorSupporterSerializer(serializers.ModelSerializer):
     """Serializer for creator/supporter info in wallet serializers"""
+
     patron_name = serializers.CharField(read_only=True, source="payment.patron_name")
-    patron_message = serializers.CharField(read_only=True, source="payment.patron_message")
+    patron_message = serializers.CharField(
+        read_only=True, source="payment.patron_message"
+    )
     account_type = serializers.CharField(read_only=True, default="Supporter")
 
     class Meta:
@@ -53,9 +57,7 @@ class WalletListSerializer(serializers.ModelSerializer):
 class WalletDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single wallet view"""
 
-    creator_id = serializers.PrimaryKeyRelatedField(
-        source="creator", read_only=True
-    )
+    creator_id = serializers.PrimaryKeyRelatedField(source="creator", read_only=True)
     creator_name = serializers.CharField(
         source="creator.user.get_account_type", read_only=True
     )
@@ -101,15 +103,25 @@ class WalletDetailSerializer(serializers.ModelSerializer):
         return obj.transactions.count()
 
     def get_total_outgoing(self, obj):
-        return abs(obj.transactions.filter(transaction_type="PAYOUT").aggregate(
-            total=models.Sum("amount")
-        )["total"] or Decimal("0"))
+        return abs(
+            obj.transactions.filter(transaction_type="PAYOUT").aggregate(
+                total=models.Sum("amount")
+            )["total"]
+            or Decimal("0")
+        )
 
     def get_next_payout_date(self, obj):
         from .services.wallet_services import PayoutScheduleService
-        last_payout = obj.transactions.filter(transaction_type="PAYOUT").order_by("-created_at").first()
+
+        last_payout = (
+            obj.transactions.filter(transaction_type="PAYOUT")
+            .order_by("-created_at")
+            .first()
+        )
         last_payout_date = last_payout.created_at if last_payout else None
-        payout_interval = obj.payout_interval_days or 30  # default to 30 days if not set
+        payout_interval = (
+            obj.payout_interval_days or 30
+        )  # default to 30 days if not set
         next_payout_date = PayoutScheduleService.get_next_payout_date(
             last_payout_date, payout_interval
         )
@@ -150,9 +162,7 @@ class WalletUpdateSerializer(serializers.ModelSerializer):
 class WalletPayoutAccountSerializer(serializers.ModelSerializer):
     """Serializer for wallet payout account"""
 
-    wallet_id = serializers.PrimaryKeyRelatedField(
-        source="wallet", read_only=True
-    )
+    wallet_id = serializers.PrimaryKeyRelatedField(source="wallet", read_only=True)
 
     class Meta:
         model = WalletPayoutAccount
@@ -183,13 +193,9 @@ class WalletPayoutAccountSerializer(serializers.ModelSerializer):
         (10 digits, starting with 260)
         """
         if not value or len(value) < 10:
-            raise serializers.ValidationError(
-                "Phone number must be at least 10 digits"
-            )
+            raise serializers.ValidationError("Phone number must be at least 10 digits")
         if not value.startswith("260"):
-            raise serializers.ValidationError(
-                "Phone number must start with 260"
-            )
+            raise serializers.ValidationError("Phone number must start with 260")
         return value
 
     def update(self, instance, validated_data):
@@ -197,8 +203,12 @@ class WalletPayoutAccountSerializer(serializers.ModelSerializer):
         Override update to prevent changes to wallet and provider fields
         after creation. Only allow updating provider, phone number and account name.
         """
-        instance.phone_number = validated_data.get("phone_number", instance.phone_number)
-        instance.account_name = validated_data.get("account_name", instance.account_name)
+        instance.phone_number = validated_data.get(
+            "phone_number", instance.phone_number
+        )
+        instance.account_name = validated_data.get(
+            "account_name", instance.account_name
+        )
         instance.provider = validated_data.get("provider", instance.provider)
         instance.save()
         return instance
@@ -208,15 +218,11 @@ class WalletPayoutAccountSerializer(serializers.ModelSerializer):
 class WalletTransactionListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing transactions"""
 
-    wallet_id = serializers.PrimaryKeyRelatedField(
-        source="wallet", read_only=True
-    )
+    wallet_id = serializers.PrimaryKeyRelatedField(source="wallet", read_only=True)
     type_display = serializers.CharField(
         source="get_transaction_type_display", read_only=True
     )
-    status_display = serializers.CharField(
-        source="get_status_display", read_only=True
-    )
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
         model = WalletTransaction
@@ -238,15 +244,11 @@ class WalletTransactionListSerializer(serializers.ModelSerializer):
 class WalletTransactionDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for single transaction view"""
 
-    wallet_id = serializers.PrimaryKeyRelatedField(
-        source="wallet", read_only=True
-    )
+    wallet_id = serializers.PrimaryKeyRelatedField(source="wallet", read_only=True)
     type_display = serializers.CharField(
         source="get_transaction_type_display", read_only=True
     )
-    status_display = serializers.CharField(
-        source="get_status_display", read_only=True
-    )
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
     payment_id = serializers.PrimaryKeyRelatedField(
         source="payment", read_only=True, allow_null=True
     )
@@ -294,17 +296,13 @@ class WalletTransactionCreateSerializer(serializers.ModelSerializer):
     def validate_amount(self, value):
         """Validate transaction amount"""
         if value <= Decimal("0"):
-            raise serializers.ValidationError(
-                "Amount must be greater than 0"
-            )
+            raise serializers.ValidationError("Amount must be greater than 0")
         return value
 
     def validate_fee(self, value):
         """Validate transaction fee"""
         if value < Decimal("0"):
-            raise serializers.ValidationError(
-                "Fee cannot be negative"
-            )
+            raise serializers.ValidationError("Fee cannot be negative")
         return value
 
 
@@ -313,9 +311,7 @@ class WalletKYCSerializer(serializers.ModelSerializer):
     """Serializer for wallet KYC"""
 
     # convert UUID to string for JSON serialization
-    wallet_id = serializers.CharField(
-        source="wallet.id", read_only=True
-    )
+    wallet_id = serializers.CharField(source="wallet.id", read_only=True)
     document_type_display = serializers.CharField(
         source="get_id_document_type_display", read_only=True
     )
@@ -357,9 +353,7 @@ class WalletKYCSerializer(serializers.ModelSerializer):
     def validate_account_type(self, value):
         """Validate full name"""
         if not value or len(value.strip()) < 2:
-            raise serializers.ValidationError(
-                "Full name must be at least 2 characters"
-            )
+            raise serializers.ValidationError("Full name must be at least 2 characters")
         return value
 
     def validate_bank_account_number(self, value):

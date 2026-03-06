@@ -7,13 +7,17 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class UserTypeSelectionSerializer(serializers.Serializer):
-    allowed_roles = ['creator', 'patron', 'guest']
+    allowed_roles = ["creator", "patron", "guest"]
     user_type = serializers.ChoiceField(
         choices=[
-            (k, v) for k, v in User.USER_TYPE_CHOICES if k in ['creator', 'patron', 'guest']]
-            )
-    
+            (k, v)
+            for k, v in User.USER_TYPE_CHOICES
+            if k in ["creator", "patron", "guest"]
+        ]
+    )
+
 
 class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
     # --- User fields (writeable passthrough) ---
@@ -25,7 +29,7 @@ class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
     category_slugs = serializers.SlugRelatedField(
         source="categories",
         queryset=CreatorCategory.objects.filter(is_active=True),
-        slug_field='slug',
+        slug_field="slug",
         many=True,
         required=False,
     )
@@ -40,7 +44,6 @@ class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
             "website",
             "profile_image",
             "cover_image",
-            
             # User fields
             "first_name",
             "last_name",
@@ -60,7 +63,6 @@ class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
             "website": {"required": False, "allow_null": True, "allow_blank": True},
         }
 
-
     @transaction.atomic
     def update(self, instance: CreatorProfile, validated_data):
         """
@@ -71,7 +73,7 @@ class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
         """
         # --- pop nested parts ---
         categories = validated_data.pop("categories", None)  # via source="categories"
-        
+
         # --- update User fields (1:1) ---
         user_field_names = ["first_name", "last_name", "email", "phone_number"]
         user_updates = {}
@@ -96,25 +98,25 @@ class UpdateCreatorProfileSerializer(serializers.ModelSerializer):
 
         return instance
 
+
 class CreatorCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CreatorCategory
         fields = [
-            'name',
-            'slug',
-            'icon',
-            'is_featured',
-            'country_code',
-            'is_active',
+            "name",
+            "slug",
+            "icon",
+            "is_featured",
+            "country_code",
+            "is_active",
         ]
 
 
 class CreatorPublicSerializer(serializers.ModelSerializer):
     """Serializer for public creator profile data."""
+
     user = CustomUserSerializer(read_only=True)
-    wallet_id = serializers.PrimaryKeyRelatedField(
-        source="wallet", read_only=True
-    )
+    wallet_id = serializers.PrimaryKeyRelatedField(source="wallet", read_only=True)
     profile_image = serializers.ImageField(max_length=None, use_url=True)
     cover_image = serializers.ImageField(max_length=None, use_url=True)
     categories = CreatorCategorySerializer(many=True, read_only=True)
@@ -122,20 +124,20 @@ class CreatorPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreatorProfile
         fields = [
-            'user',
-            'wallet_id',
-            'bio',
-            'profile_image',
-            'cover_image',
-            'website',
-            'followers_count',
-            'rating',
-            'verified',
-            'created_at',
-            'updated_at',
-            'status',
-            'categories',
-             # Social media links
+            "user",
+            "wallet_id",
+            "bio",
+            "profile_image",
+            "cover_image",
+            "website",
+            "followers_count",
+            "rating",
+            "verified",
+            "created_at",
+            "updated_at",
+            "status",
+            "categories",
+            # Social media links
             "x_profile",
             "instagram_profile",
             "youtube_profile",
@@ -143,24 +145,26 @@ class CreatorPublicSerializer(serializers.ModelSerializer):
             "facebook_profile",
         ]
 
- 
+
 class CreatorListSerializer(serializers.ModelSerializer):
     """Serializer for listing creator profiles."""
+
     user = CustomUserSerializer(read_only=True)
     profile_image = serializers.ImageField(max_length=None, use_url=True)
     profile_image = serializers.ImageField(max_length=None, use_url=True)
     categories = CreatorCategorySerializer(many=True, read_only=True)
+
     class Meta:
         model = CreatorProfile
         fields = [
-            'user',
-            'bio',
-            'profile_image',
-            'website',
-            'followers_count',
-            'rating',
-            'verified',
-            'created_at',
-            'updated_at',
-            'categories',
+            "user",
+            "bio",
+            "profile_image",
+            "website",
+            "followers_count",
+            "rating",
+            "verified",
+            "created_at",
+            "updated_at",
+            "categories",
         ]

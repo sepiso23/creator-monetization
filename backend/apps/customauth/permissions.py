@@ -14,7 +14,9 @@ class IsCreator(permissions.BasePermission):
             view: The view being accessed.
         returns: bool: True if user is authenticated and is a creator, False otherwise.
         """
-        return request.user and request.user.is_authenticated and request.user.is_creator()
+        return (
+            request.user and request.user.is_authenticated and request.user.is_creator()
+        )
 
 
 class IsAdminUser(permissions.BasePermission):
@@ -30,7 +32,11 @@ class IsAdminUser(permissions.BasePermission):
             view: The view being accessed.
         returns: bool: True if user is authenticated and is a creator, False otherwise.
         """
-        return request.user and request.user.is_authenticated and request.user.is_admin_user()
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_admin_user()
+        )
 
 
 class IsStaffUser(permissions.BasePermission):
@@ -46,7 +52,11 @@ class IsStaffUser(permissions.BasePermission):
             view: The view being accessed.
         returns: bool: True if user is authenticated and is a creator, False otherwise.
         """
-        return request.user and request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_staff or request.user.is_superuser)
+        )
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):

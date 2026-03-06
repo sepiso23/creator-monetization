@@ -18,7 +18,7 @@ class APIKeyAuthentication(BaseAuthentication):
         Authenticate using API key from request header.
         Format: X-API-Key: sk_xxxxx
         """
-        api_key = request.META.get('HTTP_X_API_KEY')
+        api_key = request.META.get("HTTP_X_API_KEY")
 
         if not api_key:
             return None
@@ -26,7 +26,7 @@ class APIKeyAuthentication(BaseAuthentication):
         try:
             client = APIClient.objects.get(api_key=api_key, is_active=True)
         except APIClient.DoesNotExist:
-            raise AuthenticationFailed('Invalid or inactive API key.')
+            raise AuthenticationFailed("Invalid or inactive API key.")
 
         # Store client info in request for later use
         request.client = client
@@ -35,18 +35,19 @@ class APIKeyAuthentication(BaseAuthentication):
 
     def authenticate_header(self, request):
         """Return the authentication header."""
-        return 'X-API-Key'
+        return "X-API-Key"
 
 
 class RequireAPIKey(BasePermission):
     """
     Permission class to require API key authentication for frontend clients.
     """
-    message = 'API key is required. Please provide X-API-Key header.'
+
+    message = "API key is required. Please provide X-API-Key header."
 
     def has_permission(self, request, view):
         """Check if request has valid API key."""
-        return hasattr(request, 'client') and request.client is not None
+        return hasattr(request, "client") and request.client is not None
 
 
 class ClientIdentificationMiddleware:
@@ -60,7 +61,7 @@ class ClientIdentificationMiddleware:
 
     def __call__(self, request):
         # Try to identify client from API key
-        api_key = request.META.get('HTTP_X_API_KEY')
+        api_key = request.META.get("HTTP_X_API_KEY")
         if api_key:
             try:
                 client = APIClient.objects.get(api_key=api_key, is_active=True)
@@ -69,8 +70,8 @@ class ClientIdentificationMiddleware:
                 pass
 
         # Try to identify from X-Client-ID header
-        client_id = request.META.get('HTTP_X_CLIENT_ID')
-        if client_id and not hasattr(request, 'client'):
+        client_id = request.META.get("HTTP_X_CLIENT_ID")
+        if client_id and not hasattr(request, "client"):
             try:
                 client = APIClient.objects.get(id=client_id, is_active=True)
                 request.client = client

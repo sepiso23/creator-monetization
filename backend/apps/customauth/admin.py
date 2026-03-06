@@ -13,13 +13,7 @@ User = get_user_model()
 
 
 class WebHookAdmin(admin.ModelAdmin):
-    list_display = (
-        "payment",
-        "event_type",
-        "status",
-        "processed_at",
-        "external_id"
-        )
+    list_display = ("payment", "event_type", "status", "processed_at", "external_id")
     list_filter = ("event_type", "status", "processed_at")
     search_fields = ("payment__external_id", "payment__patron_phone")
 
@@ -50,13 +44,7 @@ class WalletTransactionAdmin(admin.ModelAdmin):
 
 
 class WalletAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "creator",
-        "balance",
-        "is_verified",
-        "trigger_payout"
-        )
+    list_display = ("id", "creator", "balance", "is_verified", "trigger_payout")
     list_filter = ("is_verified",)
     search_fields = ("creator__user__email", "creator__user__username")
 
@@ -79,8 +67,7 @@ class WalletAdmin(admin.ModelAdmin):
     actions = ["verify_wallets"]
 
     def verify_wallets(self, request, queryset):
-        """Admin action to verify selected wallets.
-        """
+        """Admin action to verify selected wallets."""
         for wallet in queryset:
             wallet.is_verified = True
             wallet.save()
@@ -163,15 +150,23 @@ class PaymentAdmin(admin.ModelAdmin):
             return qs.filter(is_deleted=False)
         return qs
 
-    actions = ["capture_payments", "refund_payments", "mark_as_deleted", "check_final_status"]
+    actions = [
+        "capture_payments",
+        "refund_payments",
+        "mark_as_deleted",
+        "check_final_status",
+    ]
 
     def check_final_status(self, request, queryset):
         """Admin action to check status of selected payments."""
         from apps.payments.helpers import check_final_status
+
         for payment in queryset:
             try:
                 status = check_final_status(payment)
-                self.message_user(request, f"Payment {payment.reference} status: {status}")
+                self.message_user(
+                    request, f"Payment {payment.reference} status: {status}"
+                )
             except Exception as e:
                 self.message_user(
                     request,

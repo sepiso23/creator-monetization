@@ -1,8 +1,10 @@
 """
 Serializers for Payment model
 """
+
 from rest_framework import serializers
 from .models import Payment
+
 
 class PaymentSerializer(serializers.ModelSerializer):
     """Lightweight serializer for creating payments"""
@@ -22,4 +24,3 @@ class PaymentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Call the custom manager method instead of Model.objects.create()
         return Payment.objects.create_payment(**validated_data)
-      
