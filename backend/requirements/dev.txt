@@ -44,6 +44,7 @@ pycparser==3.0
 pyflakes==3.4.0
 Pygments==2.19.2
 PyJWT==2.10.1
+pymemcache==4.0.0
 pyotp==2.9.0
 pytest==9.0.2
 pytest-cov==7.0.0
