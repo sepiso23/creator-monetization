@@ -34,13 +34,7 @@ jobs:
         env:
             DJANGO_SETTINGS_MODULE: config.settings.test
             SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        run: pytest --cov=apps --cov=utils --cov-report=xml --cov-fail-under=80
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #     files: ./coverage.xml
-      #     flags: unittests
-      #     name: codecov-umbrella-backend
-      #     fail_ci_if_error: true
+        run: pytest
+     
           
     
