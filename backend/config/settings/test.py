@@ -159,13 +159,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Parse database connection url strings
-# like psql://user:pass@127.0.0.1:8458/db
+# Use sqlite3 db for testing
 DATABASES = {
-    'extra': env.db_url(
-        'SQLITE_URL',
-        default='sqlite:///db.sqlite3'
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 
