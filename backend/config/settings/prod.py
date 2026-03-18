@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Take environment variables from .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-os.environ.setdefault('DJANGO_AUTO_SETUP', 'true')
+os.environ.setdefault('DJANGO_AUTO_SETUP', 'False')
 
 # Raises Django's ImproperlyConfigured
 # exception if SECRET_KEY not in os.environ

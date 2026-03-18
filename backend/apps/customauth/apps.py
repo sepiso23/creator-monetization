@@ -12,10 +12,10 @@ class CustomAuthConfig(AppConfig):
         if getattr(settings, "RUNNING_AUTO_SETUP", False):
             return
         settings.RUNNING_AUTO_SETUP = True
-        try:
-            call_command("migrate", interactive=False, run_syncdb=True)
-        except Exception:
-            pass
+        #try:
+         #   call_command("migrate", interactive=False, run_syncdb=True)
+        #except Exception:
+         #   pass
         try:
             call_command("collectstatic", "--noinput")
         except Exception:
