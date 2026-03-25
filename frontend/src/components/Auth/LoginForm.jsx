@@ -37,7 +37,7 @@ const LoginForm = () => {
         const from =
           // if there is a page tp return to
           location.state?.from?.pathname ||
-          (result.user.userType === "creator"
+          (result.user.role === "creator"
             ? // if they are a creator redirect to dashboard
               "/creator-dashboard"
             : // else navigate to home page
@@ -152,11 +152,11 @@ const LoginForm = () => {
           "Sign In"
         )}
       </button>
-      {/* Legal Links */}
+      {/* Link to register */}
       <div className="text-center text-sm text-gray-500">
         Don't have an account?{" "}
         <Link
-          to="/signup"
+          to="/register"
           className="text-zed-orange font-medium hover:underline"
         >
           Sign Up

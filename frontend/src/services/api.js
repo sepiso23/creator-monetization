@@ -1,96 +1,57 @@
 import axios from "axios";
-import rateLimit from "axios-rate-limit";
+import { auth } from "../firebase";
 
 // Setup Constants (Fixed for Vite)
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 const TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 15000;
 const API_KEY = import.meta.env.VITE_API_CLIENT_KEY || "";
 
 // Create Axios Instance
-const api = rateLimit(
-  axios.create({
-    baseURL: BASE_URL,
-    timeout: TIMEOUT,
-    headers: {
-      "X-API-KEY": API_KEY,
-      Accept: "application/json",
-    },
-  }),
-  {
-    maxRequests: 5,
-    perMilliseconds: 1000,
-  },
-);
-
-const refreshApi = axios.create({
+const api = axios.create({
   baseURL: BASE_URL,
   timeout: TIMEOUT,
   headers: {
-    "Content-Type": "application/json",
+    Accept: "application/json",
     "X-API-KEY": API_KEY,
   },
 });
 
-let isRefreshing = false;
-let refreshQueue = [];
-
-const processQueue = (token) => {
-  refreshQueue.forEach((cb) => cb(token));
-  refreshQueue = [];
-};
-
-// Request Interceptor (Attach Token)
+// Request Interceptor (Attach Firebase Token)
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
+  async (config) => {
+    const user = auth.currentUser;
 
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (user) {
+      try {
+        // Force refresh if token is expired or close to expiring
+        const token = await user.getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch (error) {
+        console.error("Error getting Firebase ID token:", error);
+      }
+    }
+    
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// Response Interceptor (Handle 401 & Refresh Token)
+// Response Interceptor (Handle 401)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    // Check if error is 401 (Unauthorized) and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          refreshQueue.push((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
-        });
-      }
-
-      isRefreshing = true;
-
+    // If error is 401 (Unauthorized), it might mean the token is invalid or user is not logged in
+    if (error.response?.status === 401) {
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        const { data } = await refreshApi.post("/auth/token/refresh/", {
-          refresh: refreshToken,
-        });
-
-        const newToken = data.accessToken;
-        localStorage.setItem("accessToken", newToken);
-
-        processQueue(newToken);
-
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (err) {
-        localStorage.clear();
+        await auth.signOut();
+      } catch (signOutError) {
+        console.error("Error signing out after 401:", signOutError);
+      }
+      
+      // Clear any remaining local storage and redirect
+      localStorage.clear();
+      if (window.location.pathname !== "/login") {
         window.location.href = "/login";
-        return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
       }
     }
 
