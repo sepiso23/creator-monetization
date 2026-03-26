@@ -21,10 +21,7 @@ import SupportModal from "@/components/Payment/SupportModal";
 import MetaTags from "@/components/Common/MetaTags";
 
 const getName = (creator) =>
-  `${creator?.user?.firstName || creator?.firstName || ""} ${creator?.user?.lastName || creator?.lastName || ""}`.trim() ||
-  creator?.user?.username ||
-  creator?.username ||
-  "Creator";
+  creator?.user?.username || creator?.username || "Creator";
 
 const CreatorProfile = () => {
   const [isSupportOpen, setIsSupportOpen] = useState(false);

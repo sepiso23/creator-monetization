@@ -28,7 +28,7 @@ const EditProfile = () => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullName: `${user?.firstName || ""} ${user?.lastName || ""}`.trim(),
+    username: user?.username || "",
     bio: user?.bio || "",
     email: user?.email || "",
     phone_number: user?.phone_number || "",
@@ -90,19 +90,15 @@ const EditProfile = () => {
 
     try {
       // VALIDATION
-      if (!formData.fullName?.trim()) {
-        throw new Error("Display name is required");
+      if (!formData.username?.trim()) {
+        throw new Error("Username is required");
       }
-
-      // Split full name
-      const nameParts = formData.fullName.trim().split(/\s+/);
 
       // Create FormData object -what DRF MultiPartParser expects
       const formDataToSend = new FormData();
 
       // Add text fields
-      formDataToSend.append("first_name", nameParts[0]);
-      formDataToSend.append("last_name", nameParts.slice(1).join(" ") || "");
+      formDataToSend.append("username", formData.username.trim());
 
       if (formData.bio?.trim()) {
         formDataToSend.append("bio", formData.bio.trim());
@@ -168,7 +164,7 @@ const EditProfile = () => {
   };
 
   const isEmpty = {
-    fullName: !formData.fullName?.trim(),
+    username: !formData.username?.trim(),
     bio: !formData.bio?.trim(),
     profileImage: !previews.profile && !user?.profileImage,
     coverImage: !previews.cover && !user?.coverImage,
@@ -248,7 +244,7 @@ const EditProfile = () => {
                   `}
                     >
                       <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-md bg-zed-green flex items-center justify-center text-white text-4xl font-bold">
-                        {formData.fullName?.charAt(0) || "U"}
+                        {formData.username?.charAt(0) || "U"}
                       </div>
                       {isEmpty.profileImage && !success && (
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" />
@@ -279,27 +275,27 @@ const EditProfile = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Display Name <span className="text-red-500">*</span>
+                    Username <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
+                    name="username"
+                    value={formData.username}
                     onChange={handleChange}
                     disabled={loading || success}
                     className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-black
                   ${
-                    isEmpty.fullName && !success
+                    isEmpty.username && !success
                       ? "bg-amber-50 border-amber-400 ring-2 ring-amber-400"
                       : "bg-gray-50 border-gray-200 focus:ring-zed-green"
                   }
                   ${loading || success ? "opacity-50 cursor-not-allowed" : ""}
                 `}
-                    placeholder="e.g. Chanda Mwamba"
+                    placeholder="e.g. chandamwamba"
                   />
-                  {isEmpty.fullName && !success && (
+                  {isEmpty.username && !success && (
                     <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> Display name is required
+                      <AlertCircle size={12} /> Username is required
                     </p>
                   )}
                 </div>

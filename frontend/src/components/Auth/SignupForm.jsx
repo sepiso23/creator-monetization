@@ -11,8 +11,6 @@ const SignupForm = () => {
     password2: "",
     username: "",
     userType: "creator",
-    firstName: "",
-    lastName: "",
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,12 +49,17 @@ const SignupForm = () => {
       const { user, success, error } = await register(formData);
 
       if (success) {
-        if (user.userType === "creator")
-          // if creator navigate to dashboard
-          navigate("/creator-dashboard");
-        else
+        if (user.role === "creator") {
+          // if creator navigate to onboarding if bio is missing
+          if (!user.bio) {
+            navigate("/onboarding");
+          } else {
+            navigate("/creator-dashboard");
+          }
+        } else {
           // normal users go to home
           navigate("/");
+        }
       } else setError(error);
     } catch (err) {
       console.error(err);
