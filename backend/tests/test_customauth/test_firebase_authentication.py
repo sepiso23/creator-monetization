@@ -223,7 +223,7 @@ class TestFirebaseAuthenticationUserType:
                 }
         request = self.create_mock_request()
 
-        with pytest.raises(AuthenticationFailed, match="Firebase username or email not found"):
+        with pytest.raises(AuthenticationFailed, match="Invalid email"):
             self.auth.authenticate(request)
 
     @patch("utils.authentication.auth.verify_id_token")
@@ -236,7 +236,7 @@ class TestFirebaseAuthenticationUserType:
         }
         request = self.create_mock_request()
 
-        with pytest.raises(AuthenticationFailed, match="Firebase username or email not found"):
+        with pytest.raises(AuthenticationFailed, match="Invalid username"):
             self.auth.authenticate(request)
 
     @patch("utils.authentication.auth.verify_id_token")

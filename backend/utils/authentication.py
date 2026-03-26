@@ -57,9 +57,12 @@ class FirebaseAuthentication(authentication.BaseAuthentication):
         username = decoded_token.get("username", "")
         user_type = decoded_token.get("role", "")
         picture = decoded_token.get("picture", "")
+        
+        if not isinstance(username, str) or not username.strip():
+            raise exceptions.AuthenticationFailed("Invalid username")
 
-        if not username or not email:
-            raise exceptions.AuthenticationFailed("Firebase username or email not found.")
+        if not isinstance(email, str) or not email.strip():
+            raise exceptions.AuthenticationFailed("Invalid email")
         
         allowed_roles = ["admin", "creator", "patron", "guest", "staff"]
 
