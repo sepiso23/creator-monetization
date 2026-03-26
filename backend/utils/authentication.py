@@ -2,6 +2,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from apps.customauth.models import APIClient
 from rest_framework import authentication, exceptions
 from firebase_admin import auth
@@ -9,6 +10,34 @@ from firebase_admin import auth
 User = get_user_model()
 
 class FirebaseAuthentication(authentication.BaseAuthentication):
+    """
+    Firebase token-based authentication with user_type support.
+    
+    Creates or updates users with appropriate user_type based on Firebase custom claims
+    or defaults to 'creator'. When a user with user_type='creator' is created, the
+    post_save signal automatically triggers CreatorProfile creation.
+    """
+    
+    def _get_user_type_from_token(self, decoded_token):
+        """
+        Extract user_type from Firebase custom claims.
+        
+        Args:
+            decoded_token: The decoded Firebase ID token
+            
+        Returns:
+            str: The user_type ('creator', 'admin', 'staff') from claims
+                or 'creator' as default if not specified
+        """
+        # Check Firebase custom claims for user_type
+        user_type = decoded_token.get("user_type")
+        
+        if user_type and user_type in dict(User.USER_TYPE_CHOICES):
+            return user_type
+        
+        # Fall back to settings or default to 'creator'
+        return getattr(settings, 'DEFAULT_USER_TYPE', 'creator')
+    
     def authenticate(self, request):
         auth_header = request.META.get("HTTP_AUTHORIZATION", "")
         if not auth_header.startswith("Bearer "):
@@ -25,26 +54,34 @@ class FirebaseAuthentication(authentication.BaseAuthentication):
 
         firebase_uid = decoded_token.get("uid")
         email = decoded_token.get("email", "")
-        name = decoded_token.get("name", "")
+        username = decoded_token.get("name", "")
         picture = decoded_token.get("picture", "")
 
         if not firebase_uid:
             raise exceptions.AuthenticationFailed("Firebase UID not found.")
 
-        user, _ = User.objects.get_or_create(
-            username=firebase_uid,
+        # Determine user_type from Firebase custom claims or use default
+        user_type = self._get_user_type_from_token(decoded_token)
+
+        user, created = User.objects.get_or_create(
+            email=email,
             defaults={
-                "email": email or "",
-                "first_name": name or "",
+                "username": username or "",
+                "user_type": user_type,  # Set user_type on creation (triggers CreatorProfile signal)
             },
         )
 
-        # optional sync
+        # Sync email if changed
         if email and user.email != email:
             user.email = email
             user.save(update_fields=["email"])
+        
+        # Sync user_type if changed (this will trigger CreatorProfile creation/deletion signals)
+        if user.user_type != user_type:
+            user.user_type = user_type
+            user.save(update_fields=["user_type"])
 
-        # attach decoded token if you want later access
+        # Attach decoded token if you want later access
         request.firebase_user = decoded_token
         request.firebase_picture = picture
 
