@@ -13,9 +13,7 @@ import { creatorService } from "@/services/creatorService";
 import MetaTags from "../components/Common/MetaTags";
 
 const getCreatorName = (creator) => {
-  const name =
-    `${creator?.user?.firstName || ""} ${creator?.user?.lastName || ""}`.trim();
-  return name || creator?.user?.username || "Anonymous Creator";
+  return creator?.user?.username || creator?.username || "Anonymous Creator";
 };
 
 const CreatorCatalog = () => {
@@ -29,13 +27,20 @@ const CreatorCatalog = () => {
     const fetchCreators = async () => {
       try {
         const response = await creatorService.getAllCreators();
-        if (response.status === "success") {
+        // Handle both wrapped {status: 'success', data: []} and direct array []
+        if (response && response.status === "success" && Array.isArray(response.data)) {
+          setCreators(response.data);
+        } else if (Array.isArray(response)) {
+          setCreators(response);
+        } else if (response && Array.isArray(response.data)) {
+          // Some APIs return { data: [] } without status
           setCreators(response.data);
         } else {
-          throw new Error("Failed to fetch");
+          console.error("Unexpected API response format:", response);
+          throw new Error("Invalid data format received from server");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Fetch creators error:", err);
         setError("Unable to reach the gallery. Please try again later.");
       } finally {
         setLoading(false);
@@ -54,11 +59,11 @@ const CreatorCatalog = () => {
       // match the categories of the creator
       const matchCategory =
         selectedCategory === "All" ||
-        c.categories.find((cat) =>
-          cat.toLowerCase().includes(selectedCategory.toLowerCase()),
-        );
+        (Array.isArray(c.categories) &&
+          c.categories.find((cat) =>
+            cat.toLowerCase().includes(selectedCategory.toLowerCase()),
+          ));
 
-      [].fin;
       return matchSearch && matchCategory;
     });
   }, [creators, searchTerm, selectedCategory]);
@@ -196,8 +201,8 @@ const CreatorCatalog = () => {
                 const name = getCreatorName(creator);
                 return (
                   <Link
-                    to={`/${creator.user?.slug}`}
-                    key={creator.user?.id || creator._id}
+                    to={`/${creator.user?.slug || creator.slug}`}
+                    key={creator.user?.id || creator._id || creator.id}
                     className="group"
                   >
                     <div className="flex flex-col h-full">
@@ -221,7 +226,7 @@ const CreatorCatalog = () => {
                         {/* Floating Badge */}
                         <div className="absolute top-4 left-4">
                           <span className="bg-white/80 backdrop-blur-md text-gray-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter shadow-sm">
-                            {creator.user?.userType || "Creator"}
+                            {creator.user?.userType || creator.userType || "Creator"}
                           </span>
                         </div>
                       </div>
