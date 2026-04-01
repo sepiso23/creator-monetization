@@ -21,7 +21,7 @@ import SupportModal from "@/components/Payment/SupportModal";
 import MetaTags from "@/components/Common/MetaTags";
 
 const getName = (creator) =>
-  creator?.user?.name || creator?.name || "Creator";
+  creator?.user?.username || creator?.name || "Creator";
 
 const CreatorProfile = () => {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
@@ -212,15 +212,15 @@ const CreatorProfile = () => {
               className="group-hover:-translate-x-0.5 transition-transform"
             />
           </button>
-          {creator.coverImage ? (
-            <img
-              src={creator.coverImage}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-zed-green/20 via-white to-zed-orange/20" />
-          )}
+          <img
+            src={creator.coverImage || `https://picsum.photos/seed/${creator.id || slug}/1200/400?blur=2`}
+            alt="Cover"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1200&auto=format&fit=crop"; // Fallback to a nice gradient image
+            }}
+          />
         </div>
 
         <main className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 -mt-24 pb-20">
@@ -228,17 +228,17 @@ const CreatorProfile = () => {
           <div className="flex flex-col md:flex-row items-end gap-6 mb-8 px-2">
             {/* Large Profile Image */}
             <div className="relative group">
-              {creator.profileImage ? (
+              <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] overflow-hidden border-[6px] border-white shadow-xl bg-white">
                 <img
-                  src={creator.profileImage}
-                  alt={creator.user?.name || creator.name}
-                  className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] object-cover border-[6px] border-white shadow-xl bg-white"
+                  src={creator.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(getName(creator))}&background=000&color=fff&size=512`}
+                  alt={getName(creator)}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getName(creator))}&background=000&color=fff&size=512`;
+                  }}
                 />
-              ) : (
-                <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] border-[6px] border-white bg-zed-green flex items-center justify-center text-white text-6xl font-black shadow-xl">
-                  {getName(creator).charAt(0)}
-                </div>
-              )}
+              </div>
               {creator.status === "active" && (
                 <div
                   className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-white rounded-full shadow-sm"
@@ -483,3 +483,4 @@ const CreatorProfile = () => {
 };
 
 export default CreatorProfile;
+

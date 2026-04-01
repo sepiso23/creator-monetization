@@ -13,7 +13,7 @@ import { creatorService } from "@/services/creatorService";
 import MetaTags from "../components/Common/MetaTags";
 
 const getCreatorName = (creator) => {
-  return creator?.user?.name || creator?.name || "Anonymous Creator";
+  return creator?.user?.username || creator?.name || "Anonymous Creator";
 };
 
 const CreatorCatalog = () => {
@@ -41,7 +41,7 @@ const CreatorCatalog = () => {
         }
       } catch (err) {
         console.error("Fetch creators error:", err);
-        setError("Unable to reach the gallery. Please try again later.");
+        setError("Unable to reach the creator directory. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -145,7 +145,7 @@ const CreatorCatalog = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
             <div className="space-y-2">
               <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-                Gallery
+                Creator Directory
               </h1>
               <p className="text-gray-500 font-medium italic">
                 Support creators directly.
@@ -214,12 +214,18 @@ const CreatorCatalog = () => {
                             alt={name}
                             loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`;
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center">
-                            <span className="text-4xl font-black text-gray-300 uppercase">
-                              {name.charAt(0)}
-                            </span>
+                            <img 
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`}
+                              alt={name}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
 
@@ -274,3 +280,4 @@ const CreatorCatalog = () => {
 };
 
 export default CreatorCatalog;
+
