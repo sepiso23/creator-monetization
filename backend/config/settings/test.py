@@ -1,5 +1,5 @@
 # Test settings for Django with sqlite
-from .dev import *
+from .development import *
 
 DEBUG = False
 SECRET_KEY = 'test-secret-key'

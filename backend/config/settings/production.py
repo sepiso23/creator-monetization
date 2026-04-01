@@ -22,13 +22,14 @@ os.environ.setdefault('DJANGO_AUTO_SETUP', 'False')
 SECRET_KEY = env('SECRET_KEY')
 
 # False if not in os.environ because of casting above
-DEBUG = True
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 # CORS Configuration for multi-frontend support
 CORS_ALLOWED_ORIGINS = env(
     'CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173').split(',')
+
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = (
@@ -219,6 +220,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'utils.authentication.FirebaseAuthentication',
         'utils.authentication.APIKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
