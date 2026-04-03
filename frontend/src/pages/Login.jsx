@@ -23,7 +23,7 @@ const Login = () => {
           </div>
 
           {/* Form Component */}
-          <LoginForm />
+          <GoogleLoginButton buttonText="Continue with Google" mode="login" />
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -36,7 +36,7 @@ const Login = () => {
             </div>
           </div>
 
-          <GoogleLoginButton buttonText="Continue with Google" mode="login" />
+          <LoginForm />
         </div>
       </div>
     </>
@@ -44,3 +44,4 @@ const Login = () => {
 };
 
 export default Login;
+

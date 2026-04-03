@@ -21,7 +21,10 @@ const Signup = () => {
           </div>
 
           {/* Form Component */}
-          <SignupForm />
+          <GoogleLoginButton
+            buttonText="Continue with Google"
+            mode="register"
+          />
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -34,10 +37,7 @@ const Signup = () => {
             </div>
           </div>
 
-          <GoogleLoginButton
-            buttonText="Continue with Google"
-            mode="register"
-          />
+          <SignupForm />
         </div>
       </div>
     </>
@@ -45,3 +45,4 @@ const Signup = () => {
 };
 
 export default Signup;
+
