@@ -209,26 +209,46 @@ const CreatorCatalog = () => {
                     <div className="flex flex-col h-full">
                       {/* Image Container with high-end shadow */}
                       <div className="aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-100 relative shadow-[0_15px_35px_-10px_rgba(0,0,0,0.1)] transition-transform duration-500 group-hover:-translate-y-2">
-                        {creator.profileImage ? (
-                          <img
-                            src={creator.profileImage}
-                            alt={name}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`;
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center">
-                            <img 
-                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`}
-                              alt={name}
-                              className="w-full h-full object-cover"
+                        {/* Cover Image as Background */}
+                        <div className="absolute inset-0">
+                          {creator.coverImage ? (
+                            <img
+                              src={creator.coverImage}
+                              alt="Cover"
+                              className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-700"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1200&auto=format&fit=crop";
+                              }}
                             />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-200" />
+                          )}
+                        </div>
+
+                        {/* Profile Image as Centered Avatar */}
+                        <div className="absolute inset-0 flex items-center justify-center p-8">
+                          <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-[6px] border-white shadow-2xl bg-white transition-transform duration-700 group-hover:scale-110">
+                            {creator.profileImage ? (
+                              <img
+                                src={creator.profileImage}
+                                alt={name}
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`;
+                                }}
+                              />
+                            ) : (
+                              <img 
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=512`}
+                                alt={name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
-                        )}
+                        </div>
 
                         {/* Floating Badge */}
                         <div className="absolute top-4 left-4">

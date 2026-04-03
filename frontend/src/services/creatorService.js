@@ -17,13 +17,13 @@ export const creatorService = {
         return creatorsCache;
       }
       const response = await api.get("/creators/all/");
-      creatorsCache = response.data;
+      
+      // Normalize data
+      const creators = response.data?.data || response.data;
+
+      creatorsCache = creators;
 
       // Populate individual cache for faster profile loading
-      const creators = Array.isArray(creatorsCache)
-        ? creatorsCache
-        : creatorsCache?.data;
-
       if (Array.isArray(creators)) {
         creators.forEach((c) => {
           const slug = c.user?.slug || c.slug;
@@ -31,7 +31,7 @@ export const creatorService = {
         });
       }
 
-      return creatorsCache;
+      return creators;
     } catch (error) {
       throw error.response?.data || error.message;
     }
@@ -52,8 +52,10 @@ export const creatorService = {
         return creatorBySlugCache.get(slug);
       }
       const response = await api.get(`/creators/${slug}/`);
-      creatorBySlugCache.set(slug, response.data);
-      return response.data;
+      const creator = response.data?.data || response.data;
+
+      creatorBySlugCache.set(slug, creator);
+      return creator;
     } catch (error) {
       throw error.response?.data || error.message || "Failed to fetch creator.";
     }

@@ -20,11 +20,8 @@ export const AuthProvider = ({ children }) => {
 
   const enhanceUserInBackground = async (userData) => {
     try {
-      // This part depends on the existing creatorService which might still point to the old backend
-      // If the user wants full Firebase, we might need to migrate these services too.
-      // For now, I'll keep it but wrap in try-catch.
       if (userData.slug) {
-        const [{ data: creatorData }, walletData] = await Promise.all([
+        const [creatorData, walletData] = await Promise.all([
           creatorService.getCreatorBySlug(userData.slug),
           walletService.getWalletData(),
         ]);
@@ -183,21 +180,22 @@ export const AuthProvider = ({ children }) => {
       const result = await creatorService.updateCreator(formData);
       
       if (result.success) {
-        const updatedData = result.data;
+        const normalizedData = result.data;
         
         // Prepare Firestore updates to keep in sync
         const firestoreUpdates = {
-          name: updatedData.name,
-          bio: updatedData.bio,
-          slug: updatedData.slug,
-          profileImage: updatedData.profileImage,
-          coverImage: updatedData.coverImage,
+          name: normalizedData.name || user.name,
+          bio: normalizedData.bio !== undefined ? normalizedData.bio : user.bio,
+          slug: normalizedData.slug || user.slug,
+          profileImage: normalizedData.profileImage || user.profileImage || "",
+          coverImage: normalizedData.coverImage || user.coverImage || "",
+          phoneNumber: normalizedData.phoneNumber || user.phoneNumber || "",
           // Social links
-          tiktok: updatedData.tiktok || "",
-          facebook: updatedData.facebook || "",
-          website: updatedData.website || "",
-          instagram: updatedData.instagram || "",
-          twitter: updatedData.twitter || "",
+          tiktok: normalizedData.tiktok || "",
+          facebook: normalizedData.facebook || "",
+          website: normalizedData.website || "",
+          instagram: normalizedData.instagram || "",
+          twitter: normalizedData.twitter || "",
         };
 
         // Remove undefined fields
@@ -208,12 +206,13 @@ export const AuthProvider = ({ children }) => {
         await setDoc(doc(db, "users", user.uid), firestoreUpdates, { merge: true });
         
         // Update Firebase Auth display name if name changed
-        if (updatedData.name) {
-          await updateProfile(auth.currentUser, { displayName: updatedData.name });
+        if (normalizedData.name) {
+          await updateProfile(auth.currentUser, { displayName: normalizedData.name });
         }
 
-        setUser(prev => ({ ...prev, ...updatedData }));
-        return { success: true, data: updatedData };
+        const finalUser = formatUser(auth.currentUser, { ...user, ...normalizedData });
+        setUser(finalUser);
+        return { success: true, data: normalizedData };
       } else {
         return result;
       }

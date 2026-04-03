@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Camera,
   Save,
@@ -6,18 +6,15 @@ import {
   User,
   Image as ImageIcon,
   AlertCircle,
+  Globe,
+  Facebook,
+  Instagram,
+  Twitter,
+  Music,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { validateMobileNumber } from "@/utils/mobileMoney";
-
-const CATEGORY_OPTIONS = [
-  { label: "Music", value: "music-djs" },
-  { label: "Comedy", value: "comedy" },
-  { label: "Video", value: "videography" },
-  { label: "Art", value: "art-design" },
-  { label: "Podcast", value: "podcasts-radio" },
-];
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -28,21 +25,14 @@ const EditProfile = () => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: user?.name || "",
     bio: user?.bio || "",
-    email: user?.email || "",
-    phone_number: user?.phone_number || "",
-    category_slugs: user?.categories?.map((c) => c.slug) || [],
+    phoneNumber: user?.phoneNumber || "",
+    tiktok: user?.tiktok || "",
+    facebook: user?.facebook || "",
+    website: user?.website || "",
+    instagram: user?.instagram || "",
+    twitter: user?.twitter || "",
   });
-
-  const toggleCategory = (slug) => {
-    setFormData((prev) => ({
-      ...prev,
-      category_slugs: prev.category_slugs.includes(slug)
-        ? prev.category_slugs.filter((s) => s !== slug)
-        : [...prev.category_slugs, slug],
-    }));
-  };
 
   const [pendingFiles, setPendingFiles] = useState({
     profile: null,
@@ -50,11 +40,32 @@ const EditProfile = () => {
   });
 
   // Preview State - to show new images before upload
-  // Preview State - to show new images before upload
   const [previews, setPreviews] = useState({
     profile: user?.profileImage || null,
     cover: user?.coverImage || null,
   });
+
+  // Initialize form data once user is loaded
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (user && !isInitialized) {
+      setFormData({
+        bio: user.bio || "",
+        phoneNumber: user.phoneNumber || "",
+        tiktok: user.tiktok || "",
+        facebook: user.facebook || "",
+        website: user.website || "",
+        instagram: user.instagram || "",
+        twitter: user.twitter || "",
+      });
+      setPreviews({
+        profile: user.profileImage || null,
+        cover: user.coverImage || null,
+      });
+      setIsInitialized(true);
+    }
+  }, [user, isInitialized]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,16 +100,8 @@ const EditProfile = () => {
     setSuccess(false);
 
     try {
-      // VALIDATION
-      if (!formData.name?.trim()) {
-        throw new Error("Name is required");
-      }
-
       // Create FormData object -what DRF MultiPartParser expects
       const formDataToSend = new FormData();
-
-      // Add text fields
-      formDataToSend.append("name", formData.name.trim());
 
       if (formData.bio?.trim()) {
         formDataToSend.append("bio", formData.bio.trim());
@@ -109,27 +112,29 @@ const EditProfile = () => {
       //   formDataToSend.append("email", formData.email.trim());
       // }
 
-      if (formData.phone_number?.trim()) {
-        const phoneValidation = validateMobileNumber(formData.phone_number);
+      if (formData.phoneNumber?.trim()) {
+        const phoneValidation = validateMobileNumber(formData.phoneNumber);
         
         if (!phoneValidation.isValid)
           throw new Error("Please enter a valid phone number");
 
-        formDataToSend.append("phone_number", phoneValidation.formatted);
+        formDataToSend.append("phoneNumber", phoneValidation.formatted);
       }
 
-      // Categories (IMPORTANT)
-      formData.category_slugs.forEach((slug) => {
-        formDataToSend.append("category_slugs", slug);
-      });
+      // Social Links
+      if (formData.tiktok?.trim()) formDataToSend.append("tiktok", formData.tiktok.trim());
+      if (formData.facebook?.trim()) formDataToSend.append("facebook", formData.facebook.trim());
+      if (formData.website?.trim()) formDataToSend.append("website", formData.website.trim());
+      if (formData.instagram?.trim()) formDataToSend.append("instagram", formData.instagram.trim());
+      if (formData.twitter?.trim()) formDataToSend.append("twitter", formData.twitter.trim());
 
       // IMPORTANT: Append files directly - NO Base64 conversion!
       if (pendingFiles.profile) {
-        formDataToSend.append("profile_image", pendingFiles.profile);
+        formDataToSend.append("profileImage", pendingFiles.profile);
       }
 
       if (pendingFiles.cover) {
-        formDataToSend.append("cover_image", pendingFiles.cover);
+        formDataToSend.append("coverImage", pendingFiles.cover);
       }
 
       // Send FormData - DO NOT set Content-Type header, let browser set it with boundary
@@ -151,8 +156,10 @@ const EditProfile = () => {
           setPreviews((prev) => ({ ...prev, cover: result.data.coverImage }));
         }
 
-        // Redirect after successful update
-        setTimeout(() => navigate("/creator-dashboard"), 1500);
+        // Redirect after successful update - FORCE FULL RELOAD
+        setTimeout(() => {
+          window.location.href = "/creator-dashboard";
+        }, 1500);
       } else {
         setError(result.error || "Failed to update profile");
       }
@@ -164,7 +171,6 @@ const EditProfile = () => {
   };
 
   const isEmpty = {
-    name: !formData.name?.trim(),
     bio: !formData.bio?.trim(),
     profileImage: !previews.profile && !user?.profileImage,
     coverImage: !previews.cover && !user?.coverImage,
@@ -176,6 +182,36 @@ const EditProfile = () => {
     <>
       <div className="min-h-screen bg-gray-50 pb-20">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto mt-6 px-4">
+          {/* Read-only Info Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Email
+                </label>
+                <p className="text-gray-900 font-medium truncate" title={user?.email}>
+                  {user?.email}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Username
+                </label>
+                <p className="text-gray-900 font-medium truncate" title={user?.name}>
+                  {user?.name}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Slug
+                </label>
+                <p className="text-gray-900 font-medium truncate" title={user?.slug}>
+                  @{user?.slug}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Success Message */}
           {success && (
             <div className="mb-6 bg-green-50 text-green-700 px-4 py-3 rounded-xl border border-green-200 flex items-center gap-2 animate-in slide-in-from-top-2">
@@ -244,7 +280,7 @@ const EditProfile = () => {
                   `}
                     >
                       <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-md bg-zed-green flex items-center justify-center text-white text-4xl font-bold">
-                        {formData.name?.charAt(0) || "U"}
+                        {user?.name?.charAt(0) || "U"}
                       </div>
                       {isEmpty.profileImage && !success && (
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" />
@@ -273,33 +309,6 @@ const EditProfile = () => {
 
               {/* TEXT FIELDS */}
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={loading || success}
-                    className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-black
-                  ${
-                    isEmpty.name && !success
-                      ? "bg-amber-50 border-amber-400 ring-2 ring-amber-400"
-                      : "bg-gray-50 border-gray-200 focus:ring-zed-green"
-                  }
-                  ${loading || success ? "opacity-50 cursor-not-allowed" : ""}
-                `}
-                    placeholder="e.g. Chanda Mwamba"
-                  />
-                  {isEmpty.name && !success && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertCircle size={12} /> Name is required
-                    </p>
-                  )}
-                </div>
-
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     Bio / About
@@ -332,54 +341,90 @@ const EditProfile = () => {
                   </label>
                   <input
                     type="tel"
-                    name="phone_number"
-                    value={formData.phone_number}
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
                     placeholder="0 97 123 4567"
                   />
                 </div>
 
-                {/* <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green"
-                    placeholder="you@example.com"
-                  />
-                </div> */}
+                {/* SOCIAL LINKS */}
+                <div className="pt-4 border-t border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    Social Links
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Music size={18} />
+                      </div>
+                      <input
+                        type="url"
+                        name="tiktok"
+                        value={formData.tiktok}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
+                        placeholder="TikTok URL"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">
-                    Categories
-                  </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Facebook size={18} />
+                      </div>
+                      <input
+                        type="url"
+                        name="facebook"
+                        value={formData.facebook}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
+                        placeholder="Facebook URL"
+                      />
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {CATEGORY_OPTIONS.map((cat) => (
-                      <label
-                        key={cat.value}
-                        className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition
-                        ${
-                          formData.category_slugs.includes(cat.value)
-                            ? "bg-zed-green/10 border-zed-green text-zed-green"
-                            : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                        }
-                      `}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.category_slugs.includes(cat.value)}
-                          onChange={() => toggleCategory(cat.value)}
-                          className="hidden"
-                        />
-                        <span className="font-medium">{cat.label}</span>
-                      </label>
-                    ))}
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Instagram size={18} />
+                      </div>
+                      <input
+                        type="url"
+                        name="instagram"
+                        value={formData.instagram}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
+                        placeholder="Instagram URL"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Twitter size={18} />
+                      </div>
+                      <input
+                        type="url"
+                        name="twitter"
+                        value={formData.twitter}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
+                        placeholder="Twitter URL"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Globe size={18} />
+                      </div>
+                      <input
+                        type="url"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
+                        placeholder="Website URL"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -432,3 +477,4 @@ const EditProfile = () => {
 };
 
 export default EditProfile;
+

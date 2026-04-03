@@ -20,24 +20,37 @@ const Header = () => {
   };
 
   const renderAvatar = () => {
-    if (user?.profileImage && typeof user.profileImage === "string") {
+    const profileImg = user?.profileImage || user?.photoURL;
+    
+    if (profileImg && typeof profileImg === "string") {
       return (
         <img
-          src={user.profileImage}
+          src={profileImg}
           alt={`${user.name || user.email}'s profile`}
           className="w-9 h-9 rounded-full object-cover border border-gray-200"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
         />
       );
     }
 
-    const initials =
-      user?.name
-        ? user.name.substring(0, 2).toUpperCase()
-        : user?.email?.[0]?.toUpperCase() || "U";
+    const getInitials = () => {
+      if (user?.name) {
+        const parts = user.name.split(" ");
+        if (parts.length > 1) {
+          return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return user.name.substring(0, 2).toUpperCase();
+      }
+      return user?.email?.[0]?.toUpperCase() || "U";
+    };
 
     return (
       <div className="w-9 h-9 rounded-full bg-zed-green flex items-center justify-center text-white text-sm font-bold uppercase ring-2 ring-white">
-        {initials}
+        {getInitials()}
       </div>
     );
   };
@@ -150,3 +163,4 @@ const Header = () => {
 };
 
 export default Header;
+
