@@ -144,7 +144,7 @@ class CreatorListSerializer(serializers.ModelSerializer):
     """Serializer for listing creator profiles."""
     user = UserSerializer(read_only=True)
     profile_image = serializers.ImageField(max_length=None, use_url=True)
-    profile_image = serializers.ImageField(max_length=None, use_url=True)
+    cover_image = serializers.ImageField(max_length=None, use_url=True)
     categories = CreatorCategorySerializer(many=True, read_only=True)
     class Meta:
         model = CreatorProfile
@@ -152,6 +152,7 @@ class CreatorListSerializer(serializers.ModelSerializer):
             'user',
             'bio',
             'profile_image',
+            'cover_image',
             'website',
             'followers_count',
             'rating',
