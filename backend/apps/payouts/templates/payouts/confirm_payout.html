@@ -12,24 +12,55 @@
     <li><strong>Balance:</strong> {{ wallet.balance }}</li>
 </ul>
 
-<p> The payout will be sent to the following payout account:</p>
-<ul>
-    <li><strong>Account Type:</strong> {{ payout_account.account_name }}</li>
-    <li><strong>Account Number:</strong> {{ payout_account.phone_number }}</li>
-    <li><strong>Bank Name:</strong> {{ payout_account.provider }}</li>
-</ul>
+{% if has_payout_account %}
+    <p> The payout will be sent to the following payout account:</p>
+    <ul>
+        <li><strong>Account Type:</strong> {{ payout_account.account_name }}</li>
+        <li><strong>Account Number:</strong> {{ payout_account.phone_number }}</li>
+        <li><strong>Bank Name:</strong> {{ payout_account.provider }}</li>
+    </ul>
 
-<p style="color: red; font-weight: bold;">
-    This action is irreversible.
-</p>
+    <p style="color: red; font-weight: bold;">
+        This action is irreversible.
+    </p>
 
-<form method="post">
-    {% csrf_token %}
-    <div style="margin-top: 20px;">
-        <input type="submit" class="default" value="Yes, initiate payout">
-        <a href="{{ change_url }}" class="button cancel-link">
-            Cancel
-        </a>
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-top: 20px;">
+            <input type="submit" class="default" value="Yes, initiate payout">
+            <a href="{{ change_url }}" class="button cancel-link">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% else %}
+    <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin: 20px 0;">
+        <h3 style="color: #856404; margin-top: 0;">⚠️ Payout Account Not Set Up</h3>
+        <p style="color: #856404; margin: 10px 0;">
+            The creator has not yet configured a payout account. Without a valid payout account,
+            the payout cannot be processed.
+        </p>
+        <p style="color: #856404; margin: 10px 0;">
+            <strong>What happens next:</strong>
+            An email notification has been automatically sent to the creator asking them to set up
+            their payout account details in their dashboard.
+        </p>
+        <p style="color: #856404; margin: 10px 0;">
+            <strong>Next steps:</strong>
+            Once the creator has configured their payout account, you can proceed with initiating
+            the payout from this page.
+        </p>
     </div>
-</form>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-top: 20px;">
+            <input type="submit" class="default" value="Yes, initiate payout" disabled style="opacity: 0.6; cursor: not-allowed;" title="Payout account not configured">
+            <a href="{{ change_url }}" class="button cancel-link">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endif %}
 {% endblock %}
+

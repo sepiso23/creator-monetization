@@ -4,14 +4,35 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.core.mail import send_mail
+from django.conf import settings
 
 from apps.wallets.models import Wallet, WalletTransaction
 from apps.payments.services.payout_orchestrator import PayoutOrchestrator
+from apps.payouts.tasks import send_missing_payout_account_email_task
 
 
 def superuser_required(view_func):
     return user_passes_test(
         lambda u: u.is_active and u.is_superuser)(view_func)
+
+
+def send_missing_payout_account_email(wallet):
+    """
+    Trigger an async task to send an email to the wallet owner/creator requesting them to set up a payout account.
+    
+    Args:
+        wallet (Wallet): The wallet object
+    """
+    try:
+        # Send email asynchronously using Celery task
+        send_missing_payout_account_email_task.delay(str(wallet.id))
+    except Exception as e:
+        # Log error silently to avoid breaking the view
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to queue payout account email task for wallet {wallet.id}: {str(e)}")
+
 
 
 @staff_member_required
@@ -104,6 +125,13 @@ def trigger_wallet_payout(request, wallet_id):
     # STEP 1: Confirmation page
     # =============================
     if request.method == "GET":
+        # Check if payout account is verified
+        has_payout_account = payout_account.verified if payout_account else False
+        
+        # Send email to creator if payout account is missing
+        if not has_payout_account:
+            send_missing_payout_account_email(wallet)
+        
         return render(
             request,
             "payouts/confirm_payout.html",
@@ -111,12 +139,22 @@ def trigger_wallet_payout(request, wallet_id):
                 "wallet": wallet,
                 "change_url": change_url,
                 "payout_account": payout_account,
+                "has_payout_account": has_payout_account,
             },
         )
 
     # =============================
     # STEP 2: Execute payout
     # =============================
+    # Check if payout account exists before proceeding
+    if payout_account is None:
+        messages.error(
+            request,
+            "Cannot initiate payout: The creator has not set up a payout account. "
+            "An email has been sent to the creator requesting them to do so."
+        )
+        return redirect(change_url)
+    
     try:
         payout_tx = PayoutOrchestrator.initiate_payout(
             wallet=wallet,
