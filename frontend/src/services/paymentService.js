@@ -13,6 +13,7 @@ export const paymentService = {
    * @param {string} patronPhone The supporter’s mobile number (MSISDN format).
    * @param {string} patronEmail The supporter’s email address.
    * @param {string} [patronMessage=""] Optional message attached to the tip.
+   * @param {string} [patronName=""] Optional name of the supporter.
    *
    * @returns {Promise<{
    *   success: boolean,
@@ -28,6 +29,7 @@ export const paymentService = {
     patronPhone,
     patronEmail,
     patronMessage = "",
+    patronName = "",
   ) => {
     try {
       const { status, data, statusText } = await api.post(
@@ -38,6 +40,7 @@ export const paymentService = {
           patronPhone,
           patronEmail,
           patronMessage,
+          patronName,
         },
       );
 
@@ -91,3 +94,4 @@ export const paymentService = {
     }
   },
 };
+

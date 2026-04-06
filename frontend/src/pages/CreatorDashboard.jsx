@@ -21,6 +21,7 @@ import Overview from "@/components/Creator/Overview";
 import Transactions from "@/components/Creator/Transactions";
 import EditProfile from "@/components/Creator/EditProfile";
 import Guide from "@/components/Creator/Guide";
+import Supporters from "@/components/Creator/Supporters";
 import FundsAndPayouts from "@/components/Creator/FundsAndPayouts";
 import MetaTags from "@/components/Common/MetaTags";
 import PayoutAccount from "@/components/Creator/PayoutAccount";
@@ -33,6 +34,7 @@ const CreatorDashboard = () => {
   //VIEW LOGIC
   const isOverview = pathname === "/creator-dashboard";
   const isTransactionsView = pathname === "/creator-dashboard/transactions";
+  const isSupportersView = pathname === "/creator-dashboard/supporters";
   const isEditProfileView = pathname === "/creator-dashboard/edit-profile";
   const isGuideView = pathname === "/creator-dashboard/guide";
   const isFundsAndPayoutsView =
@@ -43,6 +45,7 @@ const CreatorDashboard = () => {
   const isDataView =
     isOverview ||
     isTransactionsView ||
+    isSupportersView ||
     isFundsAndPayoutsView ||
     isPayoutAccountView;
 
@@ -68,7 +71,7 @@ const CreatorDashboard = () => {
 
         // fetch wallet data: needed for overview/ transactions/ funds and payouts views
         const shouldFetchWalletData =
-          isOverview || isTransactionsView || isFundsAndPayoutsView;
+          isOverview || isTransactionsView || isFundsAndPayoutsView || isSupportersView;
 
         if (shouldFetchWalletData) {
           const walletRes = await walletService.getWalletData(1);
@@ -99,6 +102,7 @@ const CreatorDashboard = () => {
     page,
     isOverview,
     isTransactionsView,
+    isSupportersView,
     isDataView,
     isEditProfileView,
     hasWalletData,
@@ -162,6 +166,7 @@ const CreatorDashboard = () => {
               <h1 className="text-3xl font-black text-gray-900 tracking-tight">
                 {isTransactionsView && "Transaction History"}
                 {isOverview && "Overview"}
+                {isSupportersView && "Supporters"}
                 {isFundsAndPayoutsView && "Funds and Payouts"}
                 {isPayoutAccountView && "Payout Account"}
               </h1>
@@ -181,6 +186,8 @@ const CreatorDashboard = () => {
               <p className="mt-2 text-sm text-gray-500">
                 {isOverview &&
                   "View your wallet balance, quick stats, and recent transactions at a glance."}
+                {isSupportersView &&
+                  "View messages and appreciation from your fans who have tipped you."}
                 {isTransactionsView &&
                   "Track all your deposits, withdrawals, and earnings in one centralized place."}
                 {isFundsAndPayoutsView &&
@@ -256,6 +263,9 @@ const CreatorDashboard = () => {
             page={page}
           />
         )}
+
+        {/* VIEW G: SUPPORTERS */}
+        {isSupportersView && <Supporters />}
 
         {/* VIEW C: EDIT PROFILE */}
         {isEditProfileView && <EditProfile user={user} />}
@@ -412,3 +422,4 @@ const CopyModal = ({ isOpen, onClose, url }) => {
 };
 
 export default CreatorDashboard;
+

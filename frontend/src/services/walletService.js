@@ -74,5 +74,25 @@ export const walletService = {
       );
     }
   },
+
+  /**
+   * Retrieves the authenticated user’s supporters list.
+   *
+   * @returns {Promise<any>} Resolves with a list of supporters.
+   *
+   * @throws {{ message: string }} Throws an error object if the request fails.
+   */
+  getSupporters: async () => {
+    try {
+      const response = await api.get(`/wallets/supporters/`);
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data || {
+          message: "Failed to fetch supporters data",
+        }
+      );
+    }
+  },
 };
 

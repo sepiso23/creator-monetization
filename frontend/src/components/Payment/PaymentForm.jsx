@@ -16,6 +16,8 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
   });
   const [isManual, setIsManual] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [patronName, setPatronName] = useState("");
+  const [patronMessage, setPatronMessage] = useState("");
 
   const validation = useMemo(() => validateMobileNumber(phone), [phone]);
 
@@ -43,7 +45,7 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
       localStorage.removeItem("saved_phone");
       localStorage.removeItem("saved_provider_id");
     }
-    onSubmit(phone, provider?.id);
+    onSubmit(phone, provider?.id, patronName, patronMessage);
   };
 
   return (
@@ -61,6 +63,34 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
       </div>
 
       <div className="space-y-4 mb-6">
+        {/* Name Input (Optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name (Optional)
+          </label>
+          <input
+            type="text"
+            value={patronName}
+            onChange={(e) => setPatronName(e.target.value)}
+            placeholder="Anonymous"
+            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all"
+          />
+        </div>
+
+        {/* Message Input (Optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Say something (Optional)
+          </label>
+          <textarea
+            value={patronMessage}
+            onChange={(e) => setPatronMessage(e.target.value)}
+            placeholder="Write a nice message..."
+            rows={2}
+            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all resize-none"
+          />
+        </div>
+
         {/* Phone Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -184,3 +214,4 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
 };
 
 export default PaymentForm;
+

@@ -5,6 +5,7 @@ import {
   PiggyBank,
   UserCog,
   UserPen,
+  Users,
 } from "lucide-react";
 
 export const menuItems = [
@@ -12,6 +13,11 @@ export const menuItems = [
     icon: LayoutDashboard,
     label: "Overview",
     path: "/creator-dashboard",
+  },
+  {
+    icon: Users,
+    label: "Supporters",
+    path: "/creator-dashboard/supporters",
   },
   {
     icon: ArrowRightLeft,
@@ -39,3 +45,4 @@ export const menuItems = [
     path: "/creator-dashboard/guide",
   },
 ];
+

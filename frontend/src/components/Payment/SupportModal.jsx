@@ -45,7 +45,7 @@ const SupportModal = ({ isOpen, onClose, creator}) => {
     setStep("PHONE");
   };
 
-  const handlePaymentSubmit = async (phone, providerId) => {
+  const handlePaymentSubmit = async (phone, providerId, patronName, patronMessage) => {
     setStep("PROCESSING");
     setErrorMsg("");
 
@@ -56,6 +56,8 @@ const SupportModal = ({ isOpen, onClose, creator}) => {
         amount,
         phone,
         creator.user.email,
+        patronMessage,
+        patronName,
       );
 
       if (success) {
