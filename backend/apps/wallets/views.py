@@ -62,7 +62,7 @@ class SupporterListView(APIView):
         # Aggregate total tips by supporter
         supporters = (
             WalletTransaction.objects.filter(
-                wallet=wallet, transaction_type="CASH_IN", status="completed"
+                wallet=wallet, transaction_type="CASH_IN"
             )
         )
 

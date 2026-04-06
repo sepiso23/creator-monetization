@@ -11,11 +11,13 @@ class CreatorSupporterSerializer(serializers.ModelSerializer):
     """Serializer for creator/supporter info in wallet serializers"""
     patron_name = serializers.CharField(read_only=True, source="payment.patron_name")
     patron_message = serializers.CharField(read_only=True, source="payment.patron_message")
+    amount = serializers.CharField(read_only=True, source="payment.amount")
+    created_at = serializers.CharField(read_only=True, source="payment.created_at")
     account_type = serializers.CharField(read_only=True, default="Supporter")
 
     class Meta:
         model = WalletTransaction
-        fields = ["patron_name", "patron_message", "account_type"]
+        fields = ["patron_name", "patron_message", "account_type", "amount", "created_at"]
 
 
 # ========== WALLET SERIALIZERS ==========
