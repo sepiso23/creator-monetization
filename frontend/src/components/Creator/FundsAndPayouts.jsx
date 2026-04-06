@@ -59,6 +59,7 @@ const FundsAndPayouts = ({ walletData, loading }) => {
   const [data, setData] = useState(null);
   const [innerLoading, setInnerLoading] = useState(false);
   const [payoutError, setPayoutError] = useState(null);
+  const [showWithdrawPopup, setShowWithdrawPopup] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,9 +96,6 @@ const FundsAndPayouts = ({ walletData, loading }) => {
               Wallet Active
             </div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">Funds & Payouts</h1>
-            <p className="text-gray-500 mt-2 text-sm md:text-base max-w-lg leading-relaxed">
-              Track your earnings, manage your available balance, and view your upcoming withdrawal schedule.
-            </p>
           </div>
           <div className="hidden md:flex items-center gap-2 text-gray-400 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
              <Landmark size={18} />
@@ -206,8 +204,8 @@ const FundsAndPayouts = ({ walletData, loading }) => {
                 <Shimmer className="w-32 h-10 rounded-xl" />
               ) : (
                 <button
-                  disabled
-                  className="w-full md:w-auto px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-bold rounded-xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                  onClick={() => setShowWithdrawPopup(true)}
+                  className="w-full md:w-auto px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
                 >
                   <Wallet size={16} />
                   Withdraw Funds
@@ -249,7 +247,7 @@ const FundsAndPayouts = ({ walletData, loading }) => {
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-bold text-gray-400">{walletData?.currency || ""}</span>
                     <p className="text-3xl font-black text-green-600 tracking-tight">
-                      {data.estimatedAmount}
+                      {walletData.balance}
                     </p>
                   </div>
                 </div>
@@ -292,11 +290,34 @@ const FundsAndPayouts = ({ walletData, loading }) => {
                   <Wallet size={16} />
                </div>
                <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                 <span className="text-gray-700 font-bold">Coming Soon:</span> Manual withdrawals are currently disabled. You will be notified when you can manually withdraw your available balance outside of the automated schedule.
+                 <span className="text-gray-700 font-bold">Payout Rules:</span> First withdrawal requires a minimum balance of K150+. Future withdrawals have no minimum — we send everything on schedule.
                </p>
             </div>
           </div>
         </div>
+
+        {/* Manual Withdraw Popup */}
+        {showWithdrawPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-2">
+                  <Clock size={32} />
+                </div>
+                <h3 className="text-xl font-black text-gray-900">Manual Withdraws</h3>
+                <p className="text-gray-500 leading-relaxed">
+                  Manual withdrawals are coming soon! For now, all payouts are sent automatically according to the bi-weekly schedule.
+                </p>
+                <button 
+                  onClick={() => setShowWithdrawPopup(false)}
+                  className="mt-4 w-full py-3 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-colors"
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
