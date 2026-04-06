@@ -51,7 +51,7 @@ export const walletService = {
 
   getPayoutAccount: async () => {
     try {
-      const response = await api.get(`/wallets/payout-account`);
+      const response = await api.get(`/wallets/payout-account/`);
       return response.data;
     } catch (error) {
       throw (
@@ -64,7 +64,7 @@ export const walletService = {
 
   updatePayoutAccount: async (accountData) => {
     try {
-      const response = await api.put(`/wallets/payout-account`, accountData);
+      const response = await api.put(`/wallets/payout-account/`, accountData);
       return response.data;
     } catch (error) {
       throw (
@@ -75,3 +75,4 @@ export const walletService = {
     }
   },
 };
+
