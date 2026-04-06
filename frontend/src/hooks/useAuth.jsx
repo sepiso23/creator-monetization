@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const enhanceUserInBackground = async (userData) => {
     try {
       if (userData.slug) {
+        localStorage.setItem("userSlug", userData.slug);
         const [creatorData, walletData] = await Promise.all([
           creatorService.getCreatorBySlug(userData.slug),
           walletService.getWalletData(),
@@ -80,12 +81,15 @@ export const AuthProvider = ({ children }) => {
         }
       } else {
         setUser(null);
+        localStorage.removeItem("userSlug");
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
+
+
 
   const login = async (email, password) => {
     try {
@@ -98,6 +102,9 @@ export const AuthProvider = ({ children }) => {
       
       if (userDoc.exists()) {
         userData = userDoc.data();
+        if (userData.slug) {
+          localStorage.setItem("userSlug", userData.slug);
+        }
       }
       
       const combinedUser = formatUser(firebaseUser, userData);
@@ -125,6 +132,7 @@ export const AuthProvider = ({ children }) => {
       };
 
       await setDoc(doc(db, "users", userCredential.user.uid), newUser);
+      localStorage.setItem("userSlug", newUser.slug);
       
       return { success: true, user: newUser };
     } catch (error) {
@@ -157,6 +165,10 @@ export const AuthProvider = ({ children }) => {
         await setDoc(doc(db, "users", firebaseUser.uid), userData);
       }
       
+      if (userData.slug) {
+        localStorage.setItem("userSlug", userData.slug);
+      }
+      
       const combinedUser = formatUser(firebaseUser, userData);
       return { success: true, user: combinedUser };
     } catch (error) {
@@ -167,6 +179,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await signOut(auth);
+      localStorage.removeItem("userSlug");
     } catch (error) {
       console.error("Logout failed", error);
     }
