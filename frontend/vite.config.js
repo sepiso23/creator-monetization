@@ -9,14 +9,7 @@ export default defineConfig({
         '@': '/src', // Maps '@' to the '/src' directory
       },
     },
-  // server: {
-  //   proxy: {
-  //     // Catch any request starting with "/api"
-  //     '/api': {
-  //       target: 'http://localhost:8000', // The Live Server URL
-  //       changeOrigin: true, // ⚠️ Crucial: This tricks the backend into thinking the request is local
-  //       secure: false,      // Helpful if the live server has SSL issues
-  //     },
-  //   },
-  // },
+  server: {
+	  allowedHosts: ['7673-45-215-251-110.ngrok-free.app'],
+  }
 })
