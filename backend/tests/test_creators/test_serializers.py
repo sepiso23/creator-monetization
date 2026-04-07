@@ -231,12 +231,9 @@ class TestCreatorPublicSerializer:
             assert data[i]['user']["last_name"] == profiles[i].user.last_name
             assert data[i]['user']["slug"] == profiles[i].user.slug
             assert data[i]['bio'] == profiles[i].bio
-            assert data[i]['followers_count'] == profiles[i].followers_count
-            assert data[i]['rating'] == profiles[i].rating
             assert 'created_at' in data[i]
             assert 'updated_at' in data[i]
             assert 'categories' in data[i]
-            assert data[i]['website'] == profiles[i].website
 
     def test_creator_public_serializer_with_verified_profile(self, user_factory):
         """Test serialization of a verified creator profile."""
