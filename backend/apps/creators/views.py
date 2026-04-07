@@ -185,7 +185,7 @@ class CreatorsListView(APIView):
 
     @extend_schema(
         operation_id="fetch_creators",
-        summary="Fetch Active Creators",
+        summary="Fetch Active/Verfified Creators",
         responses={
             200: helpers.SuccessResponseSerializer,
             400: helpers.ValidationErrorSerializer,
@@ -206,7 +206,7 @@ class CreatorsListView(APIView):
         Public endpoint (no authentication required).
         """
         creator_profiles = CreatorProfile.objects.filter(
-            status="active").order_by('-followers_count')
+            status="active", verified=True).order_by('-followers_count')
         serializer = CreatorListSerializer(
             creator_profiles, many=True, context={'request': request})
         return Response(
