@@ -197,9 +197,11 @@ const CreatorProfile = () => {
   return (
     <>
       <MetaTags
-        title={"Creator Profile | TipZed"}
-        description={"View your favourite creator's profile, and support them"}
-        keywords={"creator, tip, support"}
+        title={`${getName(creator)} | TipZed`}
+        description={creator.bio || `Support ${getName(creator)} on TipZed. Direct support empowers their creative journey.`}
+        keywords={`creator, tip, support, ${getName(creator)}, zambia`}
+        image={creator.profileImage || creator.coverImage}
+        type="profile"
       />
       <div className="min-h-screen bg-white">
         {/* Cover Image Section */}
@@ -522,21 +524,23 @@ const CreatorProfile = () => {
         )}
 
         {/* Sticky Mobile Support Bar */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-[90] flex items-center gap-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-500">
-          <button
-            onClick={() => setIsSupportOpen(true)}
-            className="flex-1 bg-zed-green text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-green-100 active:scale-95 transition-all"
-          >
-            Support {getName(creator).split(" ")[0]}
-          </button>
-          <button
-            onClick={handleShare}
-            className="p-4 rounded-2xl bg-gray-100 text-gray-500 active:scale-95 transition-all"
-            title="Share"
-          >
-            <Share2 size={24} />
-          </button>
-        </div>
+        {!isSupportOpen && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-[90] flex items-center gap-3 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom duration-500">
+            <button
+              onClick={() => setIsSupportOpen(true)}
+              className="flex-1 bg-zed-green text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-green-100 active:scale-95 transition-all"
+            >
+              Support {getName(creator).split(" ")[0]}
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-4 rounded-2xl bg-gray-100 text-gray-500 active:scale-95 transition-all"
+              title="Share"
+            >
+              <Share2 size={24} />
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
