@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckCircle,
   AlertCircle,
@@ -20,6 +20,19 @@ const PaymentStatus = ({
   onClose,
 }) => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isDelaying, setIsDelaying] = useState(false);
+
+  useEffect(() => {
+    if (status === "PROCESSING") {
+      // Use a small timeout to avoid the synchronous setState in effect warning
+      const startTimer = setTimeout(() => setIsDelaying(true), 0);
+      const endTimer = setTimeout(() => setIsDelaying(false), 4000);
+      return () => {
+        clearTimeout(startTimer);
+        clearTimeout(endTimer);
+      };
+    }
+  }, [status]);
 
   // PROCESSING STATE (Action Required)
   if (status === "PROCESSING") {
@@ -42,11 +55,18 @@ const PaymentStatus = ({
         <div className="flex flex-col gap-3">
           <button
             onClick={onVerify}
-            disabled={isLoading}
-            className="w-full bg-zed-black text-white py-3.5 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+            disabled={isLoading || isDelaying}
+            className={`w-full ${
+              isLoading || isDelaying
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-zed-green hover:bg-green-700"
+            } text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2`}
           >
-            {isLoading ? (
-              <Loader2 className="animate-spin" size={20} />
+            {isLoading || isDelaying ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                {isDelaying && !isLoading && <span>Waiting for network...</span>}
+              </>
             ) : (
               "I've Completed Payment"
             )}
@@ -54,7 +74,8 @@ const PaymentStatus = ({
 
           <button
             onClick={onRetry}
-            className="w-full bg-gray-100 text-gray-700 py-3.5 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+            disabled={isLoading || isDelaying}
+            className="w-full bg-gray-100 text-gray-700 py-3.5 rounded-xl font-bold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Payment Failed / Retry
           </button>
