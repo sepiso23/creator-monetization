@@ -222,7 +222,6 @@ export const AuthProvider = ({ children }) => {
           slug: normalizedData.slug || user.slug,
           profileImage: normalizedData.profileImage || normalizedData.profile_image || user.profileImage || "",
           coverImage: normalizedData.coverImage || normalizedData.cover_image || user.coverImage || "",
-          phoneNumber: normalizedData.phoneNumber || normalizedData.phone_number || user.phoneNumber || "",
           // Social links
           tiktok: normalizedData.tiktok || normalizedData.tiktok_url || "",
           facebook: normalizedData.facebook || normalizedData.facebook_url || "",

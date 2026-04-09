@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { validateMobileNumber } from "@/utils/mobileMoney";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -26,7 +25,6 @@ const EditProfile = () => {
 
   const [formData, setFormData] = useState({
     bio: user?.bio || "",
-    phoneNumber: user?.phoneNumber || "",
     tiktok: user?.tiktok || "",
     facebook: user?.facebook || "",
     website: user?.website || "",
@@ -52,7 +50,6 @@ const EditProfile = () => {
     if (user && !isInitialized) {
       setFormData({
         bio: user.bio || "",
-        phoneNumber: user.phoneNumber || "",
         tiktok: user.tiktok || "",
         facebook: user.facebook || "",
         website: user.website || "",
@@ -106,15 +103,6 @@ const EditProfile = () => {
       // Always send bio, even if empty, to allow clearing it
       formDataToSend.append("bio", formData.bio || "");
 
-      if (formData.phoneNumber?.trim()) {
-        const phoneValidation = validateMobileNumber(formData.phoneNumber);
-        
-        if (!phoneValidation.isValid)
-          throw new Error("Please enter a valid phone number");
-
-        formDataToSend.append("phoneNumber", phoneValidation.formatted);
-      }
-
       // Social Links
       formDataToSend.append("tiktok", formData.tiktok || "");
       formDataToSend.append("facebook", formData.facebook || "");
@@ -124,11 +112,11 @@ const EditProfile = () => {
 
       // IMPORTANT: Append files directly - NO Base64 conversion!
       if (pendingFiles.profile) {
-        formDataToSend.append("profileImage", pendingFiles.profile);
+        formDataToSend.append("profile_image", pendingFiles.profile);
       }
 
       if (pendingFiles.cover) {
-        formDataToSend.append("coverImage", pendingFiles.cover);
+        formDataToSend.append("cover_image", pendingFiles.cover);
       }
 
       // Send FormData - DO NOT set Content-Type header, let browser set it with boundary
@@ -335,20 +323,6 @@ const EditProfile = () => {
                   <p className="text-right text-xs text-gray-400 mt-2">
                     {formData.bio.length}/500
                   </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-zed-green text-black"
-                    placeholder="0 97 123 4567"
-                  />
                 </div>
 
                 {/* SOCIAL LINKS */}
