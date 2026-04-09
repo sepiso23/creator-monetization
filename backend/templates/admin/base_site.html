@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+
+{% block userlinks %}
+ {{ block.super }}
+ {% comment %} Custom global link to payouts summary(upcomign)
+ and tipzed summary of total (creators, tips, total amount process etc)
+  {% endcomment %}
+  <div class="user-tools">
+    <a href="#"> Payout Summary / </a>
+    <a href="#"> Stats</a>
+  </div>
+{% endblock %}
