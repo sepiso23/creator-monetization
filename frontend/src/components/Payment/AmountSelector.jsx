@@ -9,8 +9,8 @@ const AmountSelector = ({ onSelect }) => {
   const handleCustomSubmit = (e) => {
     e.preventDefault();
     const val = parseFloat(customAmount);
-    if (!val || val < 2) {
-      setError("Minimum tip is K2");
+    if (!val || val < 10) {
+      setError("Minimum tip is K10");
       return;
     }
     onSelect(val);
