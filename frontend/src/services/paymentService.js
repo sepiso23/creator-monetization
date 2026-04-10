@@ -78,7 +78,8 @@ export const paymentService = {
    */
   checkTip: async (paymentId) => {
     try {
-      const { status, data } = await api.get(`/payments/status/${paymentId}/`);
+      // const { status, data } = await api.get(`/payments/status/${paymentId}/`);
+      await api.get(`/payments/status/${paymentId}/`);
 
       // if (status === 200)
       //   return {
@@ -91,6 +92,7 @@ export const paymentService = {
         status: "completed",
       };
     } catch (error) {
+      console.log(error);
       // return {
       //   success: false,
       //   message:
