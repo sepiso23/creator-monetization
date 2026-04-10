@@ -118,6 +118,7 @@ class WalletAdmin(admin.ModelAdmin):
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = [
+        "id",
         "reference",
         "external_id",
         "patron_phone",

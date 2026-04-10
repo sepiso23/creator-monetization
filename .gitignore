@@ -15,6 +15,7 @@ __pycache__/
 *.pyd
 *.so
 tipzed-firebase-adminsdk-fbsvc-d3022de6c6.json
+celerybeat-schedule
 # Virtual environments
 .env
 .venv
