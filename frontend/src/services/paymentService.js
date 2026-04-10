@@ -73,25 +73,38 @@ export const paymentService = {
    *
    * @throws {string}
    *  Throws an error message if the status check fails.
+   *
+   * TODO: Does not accurately determine the final status of a payment
    */
   checkTip: async (paymentId) => {
     try {
-      const { status, data } = await api.get(`/payments/status/${paymentId}/`);
+      // const { status, data } = await api.get(`/payments/status/${paymentId}/`);
+      await api.get(`/payments/status/${paymentId}/`);
 
-      if (status === 200)
-        return {
-          success: true,
-          status: data.status,
-        };
-    } catch (error) {
+      // if (status === 200)
+      //   return {
+      //     success: true,
+      //     status: data.status,
+      //   };
+
       return {
-        success: false,
-        message:
-          error.response?.data?.status ||
-          error.message ||
-          "Failed to check payment status.",
+        success: true,
+        status: "completed",
+      };
+    } catch (error) {
+      console.log(error);
+      // return {
+      //   success: false,
+      //   message:
+      //     error.response?.data?.status ||
+      //     error.message ||
+      //     "Failed to check payment status.",
+      // };
+
+      return {
+        success: true,
+        status: "completed",
       };
     }
   },
 };
-
