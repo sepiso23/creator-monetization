@@ -92,7 +92,7 @@ def send_daily_summary_email_task(wallet_id):
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     """Schedule the daily summary email task to run every day at 7:30 AM for
-    every wallet with balance.
+    every wallet with a positive balance.
     Fetch all wallets and check if they have balance, then schedule the email task.
     """
     try:
@@ -111,14 +111,14 @@ def setup_periodic_tasks(sender, **kwargs):
 @shared_task
 def send_reminder_to_share_creator_link_email_task():
     """
-    Task to send a reminder email to creators who haven't received a tip.
+    Task to send a reminder email to creators who zero balance.
     
     This task can be scheduled to run periodically (e.g., every 3 days) to encourage
     creators to share their unique creator link and attract more supporters.
     """
     try:
         from apps.wallets.models import Wallet
-        wallets = Wallet.objects.filter(balance=0)  # Creators with no tips received
+        wallets = Wallet.objects.filter(balance=0)
         send_reminder_to_share_creator_link_email(wallets)
         logger.info(f"Sent reminder email to {wallets.count()} creators to share their creator link")
         return f"Sent reminder emails to {wallets.count()} creators"

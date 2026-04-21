@@ -596,7 +596,7 @@ Email: admin@tipzed.space
 
 def send_reminder_to_share_creator_link_email(wallets: QuerySet):
     """
-    Send a reminder email to a creator who has received any tip yet for period of time.
+    Send a reminder email to a creator who has zero balance to share their support link.
     
     This can be triggered by a Celery beat task that runs daily and checks for creators who
     have received tips but haven't shared their creator link.
@@ -635,7 +635,7 @@ def send_reminder_to_share_creator_link_email(wallets: QuerySet):
             logger.error(f"Failed to send reminder email: {str(e)}")
 
 
-def welcome_early_adopter_email(email: str):
+def welcome_early_adopter_email(email: str) -> bool:
     """
     Sends a welcome email to ealry adopters and tells them the benefits
 
@@ -666,8 +666,48 @@ def welcome_early_adopter_email(email: str):
             fail_silently=False,
         )
         logger.info(f"Successfully sent welcome email to early adopter {email}")
+        return True
     except Exception as e:
         logger.error(f"Failed to send welcome email to early adopter {email}: {str(e)}")
+        return False
 
 
+def send_reminder_to_complete_profile(email: str) -> bool:
+    """
+    Send a reminder email to a creator who have not unverified profiles.
+    
+    This can be triggered by a Celery beat task that runs daily and checks for creators who
+    have signed up but haven't completed their profile.
 
+    Args: emails (list): List of email addresses belonging to creators to send an email to.
+    """
+    try:
+        subject = "Complete Your TipZed Profile and Start Earning!"
+        message = f"""Hello,
+
+        We noticed that you haven't completed your TipZed profile setup yet. Completing your profile is essential to start receiving tips from your supporters. Here's how you can complete your profile:
+
+        1. Log into your creator dashboard
+        2. Add a profile picture and cover image
+        3. Write a compelling bio about yourself and your content
+        4. Set up your wallet to receive payouts
+
+        The more complete your profile, the more likely supporters will be to tip you! If you need any help, feel free to reach out to our support team.
+
+        Best regards,
+        The TipZed Team
+        Email: admin@tipzed.space
+        """
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL or 'noreply@tipzed.space',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        logger.info(f"Successfully sent reminder email to {email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send reminder email: {str(e)}")
+        return False
