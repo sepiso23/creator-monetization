@@ -18,8 +18,8 @@ export const creatorService = {
       }
       const response = await api.get("/creators/all/");
       
-      // Normalize data
-      const creators = response.data?.data || response.data;
+      // Extract creators from paginated response structure
+      const creators = response.data?.results?.data || response.data?.data || response.data;
 
       creatorsCache = creators;
 
@@ -52,7 +52,7 @@ export const creatorService = {
         return creatorBySlugCache.get(slug);
       }
       const response = await api.get(`/creators/${slug}/`);
-      const creator = response.data?.data || response.data;
+      const creator = response.data?.results?.data || response.data?.data || response.data;
 
       creatorBySlugCache.set(slug, creator);
       return creator;
@@ -68,7 +68,7 @@ export const creatorService = {
   getMe: async () => {
     try {
       const response = await api.get("/creators/profile/me/");
-      return response.data?.data || response.data;
+      return response.data?.results?.data || response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || error.message || "Failed to fetch profile.";
     }
@@ -97,7 +97,7 @@ export const creatorService = {
 
       return {
         success: true,
-        data: response.data?.data || response.data,
+        data: response.data?.results?.data || response.data?.data || response.data,
       };
     } catch (error) {
       return {

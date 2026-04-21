@@ -14,7 +14,7 @@ export const walletService = {
       const response = await api.get(
         `/wallets/me/${page ? `?page=${page}` : ""}`,
       );
-      return response.data.data;
+      return response.data?.results?.data || response.data?.data || response.data;
     } catch (error) {
       throw error.response?.data || { message: "Failed to fetch wallet data" };
     }
