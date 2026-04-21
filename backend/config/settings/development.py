@@ -190,6 +190,19 @@ SIMPLE_JWT = {
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
 }
 
+# Django Caching Configuration (Redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': env('REDIS_CACHE_URL', default='redis://127.0.0.1:6379/2'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        'KEY_PREFIX': 'tipzed_dev',
+        'TIMEOUT': 300,  # Default 5 minutes
+    }
+}
+
 description = """
 
 API Overview

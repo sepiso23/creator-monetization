@@ -2,6 +2,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from apps.creators.models import CreatorProfile
 from apps.creators.serializers import (
     CreatorPublicSerializer, CreatorListSerializer,
@@ -134,6 +137,7 @@ class CreatorPublicView(APIView):
     permission_classes = [AllowAny]
     serializer_class = CreatorPublicSerializer
 
+    @method_decorator(cache_page(60 * 10))  # Cache for 10 minutes (stable public profiles)
     @extend_schema(
         operation_id="retrieve_creator",
         summary="Retrieve a Creator",
@@ -163,7 +167,7 @@ class CreatorPublicView(APIView):
             Creator slug
         """
         try:
-            creator_profile = CreatorProfile.objects.get(
+            creator_profile = CreatorProfile.objects.select_related('user').get(
                 user__slug__iexact=slug, status="active")
         except CreatorProfile.DoesNotExist:
             return Response(
@@ -182,7 +186,9 @@ class CreatorPublicView(APIView):
 class CreatorsListView(APIView):
     permission_classes = [AllowAny]
     serializer_class = CreatorListSerializer
+    pagination_class = PageNumberPagination
 
+    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
     @extend_schema(
         operation_id="fetch_creators",
         summary="Fetch Active/Verfified Creators",
@@ -205,11 +211,24 @@ class CreatorsListView(APIView):
         --------------
         Public endpoint (no authentication required).
         """
-        creator_profiles = CreatorProfile.objects.filter(
-            status="active", verified=True).order_by('-followers_count')
-        serializer = CreatorListSerializer(
-            creator_profiles, many=True, context={'request': request})
-        return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK,
+        # Optimized query: select_related for user, prefetch_related for M2M relationships
+        creator_profiles = (
+            CreatorProfile.objects
+            .select_related('user')
+            .prefetch_related('categories')
+            .filter(status="active", verified=True)
+            .order_by('-followers_count')
         )
+
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginator.page_size = request.query_params.get('page_size', 20)
+        paginated_creators = paginator.paginate_queryset(creator_profiles, request)
+
+        serializer = CreatorListSerializer(
+            paginated_creators, many=True, context={'request': request})
+        
+        return paginator.get_paginated_response({
+            "status": "success",
+            "data": serializer.data,
+        })

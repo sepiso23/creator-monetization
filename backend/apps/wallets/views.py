@@ -1,8 +1,9 @@
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count, F
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from drf_spectacular.utils import extend_schema
 from apps.wallets.models import WalletTransaction, WalletKYC, WalletPayoutAccount
 from apps.payments.models import Payment
@@ -25,6 +26,7 @@ from utils.external_requests import pawapay_request
 class SupporterListView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = CreatorSupporterSerializer
+    pagination_class = PageNumberPagination
 
     @extend_schema(
         operation_id="list_wallet_supporters",
@@ -59,19 +61,24 @@ class SupporterListView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Aggregate total tips by supporter
+        # Optimized query: select_related('payment') to avoid N+1
         supporters = (
-            WalletTransaction.objects.filter(
-                wallet=wallet, transaction_type="CASH_IN"
-            )
+            WalletTransaction.objects
+            .select_related('payment')
+            .filter(wallet=wallet, transaction_type="CASH_IN")
         )
 
-        serializer = CreatorSupporterSerializer(supporters, many=True)
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginator.page_size = request.query_params.get('page_size', 25)
+        paginated_supporters = paginator.paginate_queryset(supporters, request)
+
+        serializer = CreatorSupporterSerializer(paginated_supporters, many=True)
        
-        return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK
-        )
+        return paginator.get_paginated_response({
+            "status": "success",
+            "data": serializer.data,
+        })
 
 class WalletPayoutAccountView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
@@ -325,6 +332,8 @@ class WalletListView(APIView):
 class WalletTransactionsView(APIView):
     permission_classes = [RequireAPIKey, IsAuthenticated]
     serializer_class = WalletTransactionListSerializer
+    pagination_class = LimitOffsetPagination
+
     @extend_schema(
         operation_id="list_wallet_transactions",
         summary="Retrieve Wallet Transactions",
@@ -370,19 +379,19 @@ class WalletTransactionsView(APIView):
         if tx_status:
             queryset = queryset.filter(status=tx_status)
 
-        # Order by creation date (newest first) and apply limit
-        limit = int(request.query_params.get("limit", 10))
-        transactions = queryset.order_by("-created_at")[:limit]
+        # Order by creation date (newest first)
+        queryset = queryset.order_by("-created_at")
 
-        serializer = WalletTransactionListSerializer(transactions, many=True)
-        return Response(
-            {
-                "status": "success",
-                "count": queryset.count(),
-                "data": serializer.data,
-            },
-            status=status.HTTP_200_OK
-        )
+        # Apply pagination (supports both 'limit' and 'offset' params for backward compatibility)
+        paginator = self.pagination_class()
+        paginator.page_size = int(request.query_params.get("limit", 10))
+        paginated_transactions = paginator.paginate_queryset(queryset, request)
+
+        serializer = WalletTransactionListSerializer(paginated_transactions, many=True)
+        return paginator.get_paginated_response({
+            "status": "success",
+            "data": serializer.data,
+        })
 
 
 class WalletKYCView(APIView):
