@@ -113,7 +113,7 @@ class TestWalletPayoutAccountView:
 @pytest.mark.django_db
 class TestWalletDetailsViews:
     """Tests for wallet views"""
-    def test_wallet_supporters_list_with_donations(
+    def test_retrieve_supporters_list_with_earnings(
             self, auth_api_client,
             user_factory):
         """Test getting current user's wallet supporters with donations"""
@@ -147,11 +147,19 @@ class TestWalletDetailsViews:
 
         auth_api_client.force_authenticate(user=user)
         response = auth_api_client.get("/api/v1/wallets/supporters/")
-        
+        # Update assertions to match new expected paginated response
         assert response.status_code == 200
-        data = response.data.get("data")
-        assert isinstance(data, list)
+        assert isinstance(response.data, dict)
+        assert "count" in response.data
+        assert "results" in response.data
+        assert "next" in response.data
+        assert "previous" in response.data
+        results = response.data.get("results")
+        assert results is not None
+        data = results.get("data")
+        assert data is not None
         assert len(data) == 2
+        assert isinstance(data, list)
         supporter1 = data[0]
         assert supporter1["patron_name"] == "Supporter 1"
         assert supporter1["patron_message"] == "Great content!"
@@ -184,7 +192,15 @@ class TestWalletDetailsViews:
         response = auth_api_client.get("/api/v1/wallets/supporters/")
         
         assert response.status_code == 200
-        data = response.data.get("data")
+        assert isinstance(response.data, dict)
+        assert "count" in response.data
+        assert "results" in response.data
+        assert "next" in response.data
+        assert "previous" in response.data
+        results = response.data.get("results")
+        assert results is not None
+        data = results.get("data")
+        assert data is not None
         assert isinstance(data, list)
         assert len(data) == 1
         supporter = data[0]
@@ -311,7 +327,15 @@ class TestWalletDetailsViews:
             user=wallet_transaction_factory.wallet.creator.user)
         response = api_client.get("/api/v1/wallets/transactions/")
         assert response.status_code == 200
-        data = response.data.get("data")
+        assert isinstance(response.data, dict)
+        assert "count" in response.data
+        assert "results" in response.data
+        assert "next" in response.data
+        assert "previous" in response.data
+        results = response.data.get("results")
+        assert results is not None
+        data = results.get("data")
+        assert data is not None
         assert isinstance(data, list)
         assert len(data) > 0
         transaction = data[0]
