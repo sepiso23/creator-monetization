@@ -87,14 +87,32 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         """
-        Override save to auto-generate slug if not present from username. and
-        replace spaces with hyphens in username.
+        Override save to:
+        1. Replace spaces with hyphens (preserve case for display)
+        2. Check if username exists (case-insensitive)
+        3. If exists, append random digits to avoid duplicates
+        4. Auto-generate slug from final username
         """
+        # Replace spaces with hyphens, preserve case for display
+        self.username = self.username.replace(' ', '-')
+        
+        # Check if username exists (case-insensitive lookup)
+        username_to_check = self.username
+        existing = CustomUser.objects.filter(username__iexact=username_to_check)
+        
+        # Exclude the current user if updating (not creating)
+        if self.pk:
+            existing = existing.exclude(pk=self.pk)
+        
+        # If username exists, append random digits
+        if existing.exists():
+            random_suffix = ''.join([str(secrets.randbelow(10)) for _ in range(4)])
+            self.username = f"{username_to_check}{random_suffix}"
+        
+        # Generate slug from the final username if not present
         if not self.slug:
-            self.slug = slugify(self.username)
-            self.slug = self.slug.lower()
-        # Ensure username has no spaces
-        self.username = self.username.replace(' ', '-').lower()
+            self.slug = slugify(self.username).lower()
+        
         super().save(*args, **kwargs)
 
 
