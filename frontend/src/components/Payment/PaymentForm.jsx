@@ -63,34 +63,6 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
       </div>
 
       <div className="space-y-4 mb-6">
-        {/* Name Input (Optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Your Name (Optional)
-          </label>
-          <input
-            type="text"
-            value={patronName}
-            onChange={(e) => setPatronName(e.target.value)}
-            placeholder="Anonymous"
-            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all"
-          />
-        </div>
-
-        {/* Message Input (Optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Say something (Optional)
-          </label>
-          <textarea
-            value={patronMessage}
-            onChange={(e) => setPatronMessage(e.target.value)}
-            placeholder="Write a nice message..."
-            rows={2}
-            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all resize-none"
-          />
-        </div>
-
         {/* Phone Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -195,6 +167,34 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
             Save details for future tips
           </span>
         </label>
+
+        {/* Name Input (Optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name (Optional)
+          </label>
+          <input
+            type="text"
+            value={patronName}
+            onChange={(e) => setPatronName(e.target.value)}
+            placeholder="Anonymous"
+            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all"
+          />
+        </div>
+
+        {/* Message Input (Optional) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Say something (Optional)
+          </label>
+          <textarea
+            value={patronMessage}
+            onChange={(e) => setPatronMessage(e.target.value)}
+            placeholder="Write a nice message..."
+            rows={2}
+            className="w-full px-4 py-3 text-black bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-zed-green transition-all resize-none"
+          />
+        </div>
       </div>
 
       <button
@@ -207,7 +207,7 @@ const PaymentForm = ({ amount, onSubmit, onBack }) => {
 
       <div className="mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs">
         <Lock size={12} />
-        <span>Secure Payment via pawaPay</span>
+        <span>Approve Payment from PawaPay on your device</span>
       </div>
     </div>
   );
