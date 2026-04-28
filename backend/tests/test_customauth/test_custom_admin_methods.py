@@ -91,3 +91,32 @@ def test_overide_save_method_with_duplicate_username():
     # Assert second users slug has a unique 4 digit suffix
     assert user2.slug[-4:].isdigit()
     assert user2.slug.startswith("test-user")
+
+@pytest.mark.django_db
+def test_overide_save_method_with_duplicate_username_case_insensitive():
+    """Test that the save method correctly generates a unique slug
+    when there are duplicate usernames with different cases."""
+    user1 = CustomUser.objects.create_user(
+        email="test1@example.com",
+        password="testpassword",
+        username="TEST USER"
+    )
+    user2 = CustomUser.objects.create_user(
+        email="test2@example.com",
+        password="testpassword",
+        username="test user"
+    )
+    assert user1.slug == "test-user"
+    # Assert second users slug has a unique 4 digit suffix
+    assert user2.slug[-4:].isdigit()
+    assert user2.slug.startswith("test-user")
+
+@pytest.mark.django_db
+def test_override_save_preserves_case_for_display():
+    """Test that the save method preserves the case of the username for display."""
+    user = CustomUser.objects.create_user(
+        email="test@example.com",
+        password="testpassword",
+        username="Test User"
+    )
+    assert user.username == "Test-User"
