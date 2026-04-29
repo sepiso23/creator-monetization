@@ -153,7 +153,7 @@ def welcome_early_adopter_task(slug):
     """
     try:
         from apps.creators.models import CreatorProfile
-        profile = CreatorProfile.objects.get(slug=slug)
+        profile = CreatorProfile.objects.get(user__slug=slug)
         user = profile.user
         
         # Send welcome email to early adopter

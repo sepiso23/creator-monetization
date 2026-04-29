@@ -387,7 +387,7 @@ class CreatorProfileAdmin(admin.ModelAdmin):
         """Admin action to send welcome email to selected early adopters."""
         try:
             for profile in queryset.filter(is_early_adopter=True):
-                welcome_early_adopter_task.delay(profile.slug)
+                welcome_early_adopter_task.delay(profile.user.slug)
             self.message_user(request, f"Sent welcome emails to {queryset.filter(is_early_adopter=True).count()} early adopters.")
         except Exception as e:
             self.message_user(request, f"Error sending welcome emails: {str(e)}", level="error")
